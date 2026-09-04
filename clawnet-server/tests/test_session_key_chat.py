@@ -1,54 +1,54 @@
 #!/usr/bin/env python3
 """
-以 Agent 身份给用户发消息。
+以 Agent 身份给用户发消息。 / EN: Send messages to users as Agent.
 
-从数据库读取 agent_session_keys 获取 agent_id 和 conversation_id，
-通过 ClawNet 内部 API 以 Agent 身份发送消息，走完整链路：
-  写入数据库 → WebSocket 通知前端 → 用户在页面上看到
+从数据库读取 agent_session_keys 获取 agent_id 和 conversation_id， / EN: Read agent_session_keys from the database to obtain agent_id and conversation_id,
+通过 ClawNet 内部 API 以 Agent 身份发送消息，走完整链路： / EN: Send messages as Agent through ClawNet internal API and follow the complete link:
+  写入数据库 → WebSocket 通知前端 → 用户在页面上看到 / EN: Write to database → WebSocket notification to frontend → User sees on page
 
-认证方式: X-API-Key（不需要用户密码）
+认证方式: X-API-Key（不需要用户密码） / EN: Authentication method: X-API-Key (no user password required)
 
-支持两种发送模式：
-  1. 普通模式：一次性发送完整消息
-  2. 流式模式：模拟 AI 逐字输出，前端实时显示
+支持两种发送模式： / EN: Supports two sending modes:
+  1. 普通模式：一次性发送完整消息 / EN: 1. Normal mode: send the complete message at once
+  2. 流式模式：模拟 AI 逐字输出，前端实时显示 / EN: 2. Streaming mode: simulates AI word-for-word output and front-end real-time display
 
-用法:
-  # 列出所有 session key
+用法: / EN: usage:
+  # 列出所有 session key | EN: List all session keys
   python tests/test_session_key_chat.py --list
 
-  # 以第一条记录的 Agent 身份发消息
-  python tests/test_session_key_chat.py -m "你好，我是你的助手"
+  # 以第一条记录的 Agent 身份发消息 | EN: Send a message as the Agent of the first record
+  python tests/test_session_key_chat.py -m "你好，我是你的助手" / EN: python tests/test_session_key_chat.py -m "Hello, I am your assistant"
 
-  # 流式发送（模拟 AI 逐字输出）
-  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream
+  # 流式发送（模拟 AI 逐字输出） | EN: Streaming (simulates AI verbatim output)
+  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream / EN: python tests/test_session_key_chat.py -m "Hello, I am your assistant" --stream
 
-  python tests/test_session_key_chat.py -m ## 张三的近期工作内容：
+  python tests/test_session_key_chat.py -m ## 张三的近期工作内容： / EN: python tests/test_session_key_chat.py -m ## Zhang San’s recent work content:
 
-### 近几日工作重点：
-1. **策略回测优化** - 针对高波动市场环境，调整T+0策略的滑点参数，基于三年历史数据进行重新回测，重点关注策略的回撤表现
-2. **数据库故障排查** - 处理行情数据接口偶发性丢包问题，确保生产环境的实时行情推送延迟控制在毫秒级以内
-3. **需求对接与翻译** - 将业务部门需求转化为具体的技术规格文档
+### 近几日工作重点： | EN: ## Focus of work in recent days:
+1. **策略回测优化** - 针对高波动市场环境，调整T+0策略的滑点参数，基于三年历史数据进行重新回测，重点关注策略的回撤表现 / EN: 1. **Strategy Backtest Optimization** - In response to the highly volatile market environment, adjust the slippage parameters of the T+0 strategy, conduct a retest based on three years of historical data, and focus on the drawdown performance of the strategy.
+2. **数据库故障排查** - 处理行情数据接口偶发性丢包问题，确保生产环境的实时行情推送延迟控制在毫秒级以内 / EN: 2. **Database Troubleshooting** - Deal with the occasional packet loss problem in the market data interface and ensure that the real-time market push delay in the production environment is controlled within milliseconds.
+3. **需求对接与翻译** - 将业务部门需求转化为具体的技术规格文档 / EN: 3. **Requirement docking and translation** - Convert business department requirements into specific technical specification documents
 
 ---
 
-这个信息与之前几次查询的结果基本一致。看起来跨助手协作功能已经稳定运行了多次测试。
+这个信息与之前几次查询的结果基本一致。看起来跨助手协作功能已经稳定运行了多次测试。 / EN: This information is basically consistent with the results of several previous queries. It looks like the cross-assistant collaboration feature has been running stably for multiple tests.
 
-需要我继续测试其他场景（比如询问王五的工作内容），或者我们可以开始处理你的实际工作任务了？" --stream
+需要我继续测试其他场景（比如询问王五的工作内容），或者我们可以开始处理你的实际工作任务了？" --stream / EN: Do you need me to continue testing other scenarios (such as asking Wang Wu about his work content), or can we start working on your actual work tasks? " --stream
 
-  # 流式发送，自定义发送间隔（毫秒）
-  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream --stream-delay 100
+  # 流式发送，自定义发送间隔（毫秒） | EN: Streaming sending, custom sending interval (milliseconds)
+  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream --stream-delay 100 / EN: python tests/test_session_key_chat.py -m "Hello, I am your assistant" --stream --stream-delay 100
 
-  # 交互模式
+  # 交互模式 | EN: interactive mode
   python tests/test_session_key_chat.py -i
 
-  # 交互模式 + 流式发送
+  # 交互模式 + 流式发送 | EN: Interactive mode + streaming
   python tests/test_session_key_chat.py -i --stream
 
-  # 指定记录索引（从 --list 中选）
-  python tests/test_session_key_chat.py --index 0 -m "你好"
+  # 指定记录索引（从 --list 中选） | EN: Specify record index (selected from --list)
+  python tests/test_session_key_chat.py --index 0 -m "你好" / EN: python tests/test_session_key_chat.py --index 0 -m "Hello"
 
-  # 自定义后端地址和 API Key
-  python tests/test_session_key_chat.py --backend-url http://localhost:9000 --api-key mykey -m "你好"
+  # 自定义后端地址和 API Key | EN: Custom backend address and API Key
+  python tests/test_session_key_chat.py --backend-url http://localhost:9000 --api-key mykey -m "你好" / EN: python tests/test_session_key_chat.py --backend-url http://localhost:9000 --api-key mykey -m "Hello"
 """
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ import psycopg2
 import requests
 
 
-# ============ 数据库读取 ============
+# ============ 数据库读取 ============ | EN: ============ Database reading ============
 
 DEFAULT_DB_URL = "postgresql://clawnet:clawnet@localhost:5432/clawnet"
 DEFAULT_BACKEND_URL = "http://localhost:9000"
@@ -135,7 +135,7 @@ def print_session_keys(records: list[dict]) -> None:
     print(f"\n{'='*80}\n")
 
 
-# ============ 内部 API 调用 ============
+# ============ 内部 API 调用 ============ | EN: ============ Internal API calls ============
 
 def send_as_agent(
     backend_url: str,
@@ -160,7 +160,7 @@ def send_as_agent(
     return resp.json()
 
 
-# ============ 流式发送 API ============
+# ============ 流式发送 API ============ | EN: ============ Streaming API ============
 
 def stream_start(
     backend_url: str,
@@ -235,19 +235,19 @@ def send_as_agent_streaming(
     chunk_size: int = 1,
     verbose: bool = False,
 ) -> dict:
-    """以 Agent 身份通过内部 API 发送消息（流式模式）。
+    """以 Agent 身份通过内部 API 发送消息（流式模式）。 / EN: """Send messages through the internal API as an Agent (streaming mode).
     
     Args:
-        backend_url: 后端地址
+        backend_url: 后端地址 / EN: backend_url: backend address
         api_key: API Key
         agent_id: Agent ID
-        conversation_id: 会话 ID
-        content: 要发送的完整内容
-        delay_ms: 每个增量之间的延迟（毫秒）
-        chunk_size: 每次发送的字符数
-        verbose: 是否打印发送进度
+        conversation_id: 会话 ID / EN: conversation_id: conversation ID
+        content: 要发送的完整内容 / EN: content: the complete content to be sent
+        delay_ms: 每个增量之间的延迟（毫秒） / EN: delay_ms: delay between each increment (milliseconds)
+        chunk_size: 每次发送的字符数 / EN: chunk_size: Number of characters sent each time
+        verbose: 是否打印发送进度 / EN: verbose: whether to print the sending progress
     """
-    # 1. 开始流式
+    # 1. 开始流式 | EN: 1. Start streaming
     start_result = stream_start(backend_url, api_key, agent_id, conversation_id)
     stream_id = start_result["stream_id"]
     
@@ -255,7 +255,7 @@ def send_as_agent_streaming(
         print(f"  [流式开始] stream_id={stream_id[:16]}...")
     
     try:
-        # 2. 逐字发送
+        # 2. 逐字发送 | EN: 2. Send verbatim
         delay_sec = delay_ms / 1000.0
         sent = 0
         
@@ -265,7 +265,7 @@ def send_as_agent_streaming(
             sent += len(chunk)
             
             if verbose:
-                # 打印进度（不换行）
+                # 打印进度（不换行） | EN: Print progress (without line breaks)
                 progress = sent / len(content) * 100
                 print(f"\r  [发送中] {sent}/{len(content)} ({progress:.0f}%) ", end="", flush=True)
             
@@ -274,7 +274,7 @@ def send_as_agent_streaming(
         if verbose:
             print()  # 换行
         
-        # 3. 结束流式
+        # 3. 结束流式 | EN: 3. End streaming
         end_result = stream_end(backend_url, api_key, stream_id, save_to_db=True)
         
         if verbose:
@@ -288,7 +288,7 @@ def send_as_agent_streaming(
         }
         
     except Exception as e:
-        # 发生错误时尝试结束流式（不保存）
+        # 发生错误时尝试结束流式（不保存） | EN: Attempt to end streaming (without saving) on ​​error
         try:
             stream_end(backend_url, api_key, stream_id, save_to_db=False)
         except:
@@ -296,7 +296,7 @@ def send_as_agent_streaming(
         raise e
 
 
-# ============ 主程序 ============
+# ============ 主程序 ============ | EN: ============ Main program ============
 
 async def run(args: argparse.Namespace) -> int:
     records = fetch_session_keys(args.db_url, args.user_id)
@@ -309,7 +309,7 @@ async def run(args: argparse.Namespace) -> int:
         print("数据库中没有 session key 记录。请先通过前端给 Agent 发一条消息。")
         return 1
 
-    # 选择记录
+    # 选择记录 | EN: Select record
     record = None
     if args.session_key:
         for r in records:
@@ -341,7 +341,7 @@ async def run(args: argparse.Namespace) -> int:
     print(f"  会话:     {conv_id[:8]}...")
     print(f"  后端:     {args.backend_url}")
 
-    # 发送模式提示
+    # 发送模式提示 | EN: Send mode prompt
     mode_hint = "流式" if args.stream else "普通"
     
     if args.interactive:
@@ -411,45 +411,45 @@ def main():
         description="以 Agent 身份给用户发消息（通过 ClawNet 内部 API）",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  # 列出所有 session key
+示例: / EN: Example:
+  # 列出所有 session key | EN: List all session keys
   python tests/test_session_key_chat.py --list
 
-  # 普通发送
-  python tests/test_session_key_chat.py -m "你好，我是你的助手"
+  # 普通发送 | EN: Ordinary delivery
+  python tests/test_session_key_chat.py -m "你好，我是你的助手" / EN: python tests/test_session_key_chat.py -m "Hello, I am your assistant"
 
-  # 流式发送（模拟 AI 逐字输出）
-  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream
+  # 流式发送（模拟 AI 逐字输出） | EN: Streaming (simulates AI verbatim output)
+  python tests/test_session_key_chat.py -m "你好，我是你的助手" --stream / EN: python tests/test_session_key_chat.py -m "Hello, I am your assistant" --stream
 
-  # 流式发送，自定义延迟和块大小
-  python tests/test_session_key_chat.py -m "你好" --stream --stream-delay 100 --chunk-size 2
+  # 流式发送，自定义延迟和块大小 | EN: Streaming with custom delays and block sizes
+  python tests/test_session_key_chat.py -m "你好" --stream --stream-delay 100 --chunk-size 2 / EN: python tests/test_session_key_chat.py -m "Hello" --stream --stream-delay 100 --chunk-size 2
 
-  # 交互模式
+  # 交互模式 | EN: interactive mode
   python tests/test_session_key_chat.py -i
 
-  # 交互模式 + 流式
+  # 交互模式 + 流式 | EN: Interactive mode + streaming
   python tests/test_session_key_chat.py -i --stream
 
-  # 指定记录索引
-  python tests/test_session_key_chat.py --index 1 -m "你好"
+  # 指定记录索引 | EN: Specify record index
+  python tests/test_session_key_chat.py --index 1 -m "你好" / EN: python tests/test_session_key_chat.py --index 1 -m "Hello"
         """,
     )
-    # 连接配置
+    # 连接配置 | EN: Connection configuration
     parser.add_argument("--db-url", default=DEFAULT_DB_URL, help="PostgreSQL 连接串")
     parser.add_argument("--backend-url", default=DEFAULT_BACKEND_URL, help="ClawNet 后端地址")
     parser.add_argument("--api-key", default=DEFAULT_API_KEY, help="内部 API Key")
 
-    # 会话选择
+    # 会话选择 | EN: Session selection
     parser.add_argument("--user-id", default=None, help="按 user_id 过滤")
     parser.add_argument("--session-key", default=None, help="指定 session_key")
     parser.add_argument("--index", type=int, default=None, help="指定记录索引")
 
-    # 发送模式
+    # 发送模式 | EN: Send mode
     parser.add_argument("--message", "-m", default=None, help="要发送的消息内容")
     parser.add_argument("--interactive", "-i", action="store_true", help="交互模式")
     parser.add_argument("--list", "-l", action="store_true", help="列出所有 session key")
 
-    # 流式发送选项
+    # 流式发送选项 | EN: Streaming options
     parser.add_argument("--stream", "-s", action="store_true", help="启用流式发送模式")
     parser.add_argument("--stream-delay", type=int, default=50, help="流式发送每个增量的延迟（毫秒，默认 50）")
     parser.add_argument("--chunk-size", type=int, default=1, help="流式发送每次发送的字符数（默认 1）")

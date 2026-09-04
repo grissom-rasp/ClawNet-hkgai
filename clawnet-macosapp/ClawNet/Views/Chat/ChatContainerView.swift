@@ -455,7 +455,7 @@ struct NewChatSheet: View {
             )
             .environment(appState)
             .onDisappear {
-                // 群聊创建后刷新会话列表并关闭 NewChatSheet
+                // 群聊创建后刷新会话列表并关闭 NewChatSheet | EN: After the group chat is created, refresh the conversation list and close NewChatSheet
                 Task {
                     await chatService.loadConversations()
                     if let newest = chatService.conversations.first(where: { $0.type == .group }) {

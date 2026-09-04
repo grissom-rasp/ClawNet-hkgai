@@ -23,13 +23,13 @@ async def are_owners_contacts(db: AsyncSession, owner_a: uuid.UUID, owner_b: uui
 
 async def get_contactable_agent_ids(db: AsyncSession, current_user_id: uuid.UUID) -> list[uuid.UUID]:
     """获取当前用户可联系的所有 Agent ID 列表（自己的 Agent + 好友的 Agent）"""
-    # 1. 当前用户自己的 Agent
+    # 1. 当前用户自己的 Agent | EN: 1. The current user’s own Agent
     own_agents_result = await db.execute(
         select(Agent.id).where(Agent.owner_id == current_user_id)
     )
     own_agent_ids = [row[0] for row in own_agents_result.all()]
 
-    # 2. 查询好友列表
+    # 2. 查询好友列表 | EN: 2. Query friends list
     contacts_result = await db.execute(
         select(Contact.contact_id).where(
             Contact.user_id == current_user_id,
@@ -38,7 +38,7 @@ async def get_contactable_agent_ids(db: AsyncSession, current_user_id: uuid.UUID
     )
     friend_ids = [row[0] for row in contacts_result.all()]
 
-    # 3. 好友的 Agent (exclude main agents — they are not contactable by others)
+    # 3. 好友的 Agent (exclude main agents — they are not contactable by others) | EN: 3. Friends’ Agents (exclude main agents — they are not contactable by others)
     friend_agent_ids = []
     if friend_ids:
         # Get IDs of main tags to exclude their agents

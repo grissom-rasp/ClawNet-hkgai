@@ -1,5 +1,5 @@
 """
-Agent Session Key 持久化服务
+Agent Session Key 持久化服务 / EN: Agent Session Key persistence service
 """
 import logging
 import uuid

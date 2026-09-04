@@ -29,7 +29,7 @@ struct MessageListView: View {
         return messages.last?.id != runId
     }
 
-    /// A2A 对话中，判断流式输出的 sender 是否属于"我方"
+    /// A2A 对话中，判断流式输出的 sender 是否属于"我方" | EN: / In the A2A conversation, determine whether the sender of the streaming output belongs to "our side"
     private var streamingSenderIsUser: Bool {
         guard isAgentDialog, let sender = streamingSender else { return false }
         if sender.id == currentUserId { return true }

@@ -155,7 +155,7 @@ async def create_conversation(
         target_user = user_result.scalar_one_or_none()
 
         if target_user:
-            # 校验联系人关系：非当前用户的人类参与者必须是好友
+            # 校验联系人关系：非当前用户的人类参与者必须是好友 | EN: Verify contact relationships: Human participants who are not the current user must be friends
             if not await are_owners_contacts(db, user.id, target_user.id):
                 raise ValidationError(f"Cannot add participant: {target_user.display_name} is not in your contacts")
 
@@ -173,7 +173,7 @@ async def create_conversation(
             agent_result = await db.execute(select(Agent).where(Agent.id == pid))
             target_agent = agent_result.scalar_one_or_none()
             if target_agent:
-                # 校验联系人关系：非当前用户拥有的 Agent，其 Owner 必须是好友
+                # 校验联系人关系：非当前用户拥有的 Agent，其 Owner 必须是好友 | EN: Verify contact relationship: For an Agent that is not owned by the current user, its owner must be a friend
                 if target_agent.owner_id != user.id:
                     if not await are_owners_contacts(db, user.id, target_agent.owner_id):
                         raise ValidationError(f"Cannot add participant: {target_agent.display_name}'s owner is not in your contacts")
@@ -331,10 +331,10 @@ async def get_conversation(db: AsyncSession, conv_id: uuid.UUID, user_id: uuid.U
 
 
 async def delete_conversation(db: AsyncSession, conv_id: uuid.UUID, user_id: uuid.UUID):
-    """软删除：仅对当前用户隐藏会话，不影响其他参与者。
+    """软删除：仅对当前用户隐藏会话，不影响其他参与者。 / EN: """Soft delete: Hide the session only for the current user and does not affect other participants.
     
-    设置 hidden_at 标记后，该会话不再出现在用户的会话列表中。
-    当会话有新消息到达时，hidden_at 会被自动重置（让会话重新出现）。
+    设置 hidden_at 标记后，该会话不再出现在用户的会话列表中。 / EN: When the hidden_at tag is set, the session no longer appears in the user's session list.
+    当会话有新消息到达时，hidden_at 会被自动重置（让会话重新出现）。 / EN: When new messages arrive in the session, hidden_at will be automatically reset (allowing the session to reappear).
     """
     result = await db.execute(
         select(ConversationParticipant).where(

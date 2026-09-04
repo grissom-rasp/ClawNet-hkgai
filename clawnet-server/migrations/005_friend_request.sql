@@ -1,4 +1,4 @@
--- 好友请求表
+-- 好友请求表 | EN: friend request form
 CREATE TABLE IF NOT EXISTS friend_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     from_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

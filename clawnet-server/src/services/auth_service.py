@@ -24,7 +24,7 @@ def _build_reserved_codes() -> set[str]:
     # 0-prefix: 0000-0999
     for i in range(0, 1000):
         codes.add(f"{i:04d}")
-    # Repeating (豹子号)
+    # Repeating (豹子号) | EN: Repeating (Leopard)
     for d in range(1, 10):
         codes.add(str(d) * 4)
     # Sequential ascending

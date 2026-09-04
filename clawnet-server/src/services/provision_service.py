@@ -1,7 +1,7 @@
 """
-OpenClaw Gateway 容器生命周期管理。
+OpenClaw Gateway 容器生命周期管理。 / EN: OpenClaw Gateway container lifecycle management.
 
-负责：workspace 创建、openclaw.json 渲染、Docker 容器启停、健康检查。
+负责：workspace 创建、openclaw.json 渲染、Docker 容器启停、健康检查。 / EN: Responsible for: workspace creation, openclaw.json rendering, Docker container start and stop, health check.
 """
 
 import asyncio

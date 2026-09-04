@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  ClawNet Backend 管理脚本
+#  ClawNet Backend 管理脚本 | EN: ClawNet Backend Management Script
 #
-#  用法:
-#    ./clawnet.sh setup   [env]   — 首次初始化（构建镜像 + 启动 + 迁移）
-#    ./clawnet.sh rebuild [env]   — 重建容器（复用镜像）+ 迁移
-#    ./clawnet.sh migrate [env]   — 仅执行数据库迁移
-#    ./clawnet.sh shell   [env]   — 进入后端容器 bash
-#    ./clawnet.sh psql    [env]   — 进入 PostgreSQL 交互终端
-#    ./clawnet.sh logs    [env]   — 查看后端日志（follow）
-#    ./clawnet.sh status  [env]   — 查看容器状态
-#    ./clawnet.sh clean   [env]   — 停止并删除容器和数据卷
+#  用法: | EN: usage:
+#    ./clawnet.sh setup   [env]   — 首次初始化（构建镜像 + 启动 + 迁移） | EN: ./clawnet.sh setup [env] — First initialization (build image + startup + migration)
+#    ./clawnet.sh rebuild [env]   — 重建容器（复用镜像）+ 迁移 | EN: ./clawnet.sh rebuild [env] — Rebuild container (reuse image) + migrate
+#    ./clawnet.sh migrate [env]   — 仅执行数据库迁移 | EN: ./clawnet.sh migrate [env] — Perform database migration only
+#    ./clawnet.sh shell   [env]   — 进入后端容器 bash | EN: ./clawnet.sh shell [env] — Enter the backend container bash
+#    ./clawnet.sh psql    [env]   — 进入 PostgreSQL 交互终端 | EN: ./clawnet.sh psql [env] — Enter the PostgreSQL interactive terminal
+#    ./clawnet.sh logs    [env]   — 查看后端日志（follow） | EN: ./clawnet.sh logs [env] — View backend logs (follow)
+#    ./clawnet.sh status  [env]   — 查看容器状态 | EN: ./clawnet.sh status [env] — View container status
+#    ./clawnet.sh clean   [env]   — 停止并删除容器和数据卷 | EN: ./clawnet.sh clean [env] — Stop and delete containers and volumes
 #
-#  [env] 可选，指定 .env 文件名（不含 .env 后缀），默认使用 .env。
-#  例如:  ./clawnet.sh setup test   → 使用 .env.test
+#  [env] 可选，指定 .env 文件名（不含 .env 后缀），默认使用 .env。 | EN: [env] Optional, specify the .env file name (without .env suffix), .env is used by default.
+#  例如:  ./clawnet.sh setup test   → 使用 .env.test | EN: For example: ./clawnet.sh setup test → use .env.test
 # =============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# ---- 解析参数 ----
+# ---- 解析参数 ---- | EN: ---- Parse parameters ----
 CMD="${1:-help}"
 ENV_NAME="${2:-}"
 
@@ -30,7 +30,7 @@ else
     ENV_FILE=".env"
 fi
 
-# ---- 加载 .env ----
+# ---- 加载 .env ---- | EN: ---- Load .env ----
 if [[ -f "$ENV_FILE" ]]; then
     set -a
     # shellcheck disable=SC1090
@@ -42,8 +42,8 @@ else
     fi
 fi
 
-# ---- 派生变量（从 .env 读到的值或默认值）----
-# Docker Compose 未设置 COMPOSE_PROJECT_NAME 时默认用目录名，此处保持一致
+# ---- 派生变量（从 .env 读到的值或默认值）---- | EN: ---- Derived variables (values ​​read from .env or default values) ----
+# Docker Compose 未设置 COMPOSE_PROJECT_NAME 时默认用目录名，此处保持一致 | EN: Docker Compose defaults to the directory name when COMPOSE_PROJECT_NAME is not set, which remains consistent here.
 PROJECT="${COMPOSE_PROJECT_NAME:-$(basename "$SCRIPT_DIR")}"
 PG_CONTAINER="${PROJECT}-postgres"
 REDIS_CONTAINER="${PROJECT}-redis"
@@ -53,12 +53,12 @@ PG_DB="${POSTGRES_DB:-clawnet}"
 BE_PORT="${BACKEND_PORT:-9000}"
 
 DC="docker compose --env-file $ENV_FILE"
-# 如果 env 文件不存在，不传 --env-file
+# 如果 env 文件不存在，不传 --env-file | EN: If the env file does not exist, do not pass --env-file
 if [[ ! -f "$ENV_FILE" ]]; then
     DC="docker compose"
 fi
 
-# ---- 工具函数 ----
+# ---- 工具函数 ---- | EN: ---- Tool function ----
 header() {
     echo ""
     echo "========================================="
@@ -105,7 +105,7 @@ show_info() {
     echo ""
 }
 
-# ---- 命令实现 ----
+# ---- 命令实现 ---- | EN: ---- Command implementation ----
 case "$CMD" in
 
 setup)

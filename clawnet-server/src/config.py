@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 
 logger = logging.getLogger("clawnet.config")
 
-# ============ 用户/Agent -> OpenClaw Gateway 映射配置 ============
+# ============ 用户/Agent -> OpenClaw Gateway 映射配置 ============ | EN: ============ User/Agent -> OpenClaw Gateway Mapping Configuration ============
 
 @dataclass
 class GatewayConfig:
@@ -21,7 +21,7 @@ class GatewayConfig:
 # Populated from DB at startup (see src/main.py) and on user registration.
 USER_GATEWAY_MAP: dict[str, GatewayConfig] = {}
 
-# Agent -> Gateway 映射 (agent_id -> GatewayConfig)
+# Agent -> Gateway 映射 (agent_id -> GatewayConfig) | EN: Agent -> Gateway mapping (agent_id -> GatewayConfig)
 AGENT_GATEWAY_MAP: dict[str, GatewayConfig] = {}
 
 
@@ -64,9 +64,9 @@ def unregister_agent_gateway(agent_id: str) -> None:
 
 
 async def load_gateway_map_from_db() -> int:
-    """从数据库加载所有 running 用户的 gateway 配置到内存缓存。
+    """从数据库加载所有 running 用户的 gateway 配置到内存缓存。 / EN: """Load the gateway configuration of all running users from the database into the memory cache.
 
-    应在应用启动时调用（见 src/main.py）。
+    应在应用启动时调用（见 src/main.py）。 / EN: Should be called when the application starts (see src/main.py).
     """
     from src.database import async_session
     from sqlalchemy import select
@@ -97,7 +97,7 @@ async def load_gateway_map_from_db() -> int:
         return 0
 
 
-# ============ 应用配置 ============
+# ============ 应用配置 ============ | EN: ============ Application Configuration ============
 
 class Settings(BaseSettings):
     # App

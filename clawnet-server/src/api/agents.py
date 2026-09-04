@@ -41,9 +41,9 @@ async def get_agent_session_keys(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """获取当前用户所有 Agent 的 session key 和 Gateway 连接信息。
+    """获取当前用户所有 Agent 的 session key 和 Gateway 连接信息。 / EN: """Get the session key and Gateway connection information of all Agents of the current user.
 
-    外挂程序也可直接查询 agent_session_keys 表，无需经过此 API。
+    外挂程序也可直接查询 agent_session_keys 表，无需经过此 API。 / EN: Plug-ins can also directly query the agent_session_keys table without going through this API.
     """
     result = await db.execute(
         select(AgentSessionKey).where(
@@ -82,7 +82,7 @@ async def get_contactable_agents(
 
     responses = []
     for agent in agents:
-        # 获取 Owner 名称
+        # 获取 Owner 名称 | EN: Get Owner name
         owner = await db.get(User, agent.owner_id)
         responses.append(AgentResponse(
             id=agent.id,
@@ -128,20 +128,20 @@ async def update_agent(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    # 获取更新前的状态
+    # 获取更新前的状态 | EN: Get status before update
     old_agent = await agent_service.get_agent(db, agent_id, user.id)
     old_status = old_agent.status
     
-    # 执行更新
+    # 执行更新 | EN: perform update
     agent = await agent_service.update_agent(db, agent_id, user.id, req)
     
-    # 检查状态变化，处理连接
+    # 检查状态变化，处理连接 | EN: Check for status changes and handle connections
     if req.status and req.status != old_status:
         if req.status == "online":
-            # Agent 上线，建立 Gateway 连接
+            # Agent 上线，建立 Gateway 连接 | EN: Agent goes online and establishes Gateway connection
             await connect_agent_on_online(str(agent_id), str(user.id))
         elif req.status == "offline":
-            # Agent 下线，断开 Gateway 连接并清理对话会话
+            # Agent 下线，断开 Gateway 连接并清理对话会话 | EN: Agent goes offline, disconnects from Gateway and cleans up conversation session
             await disconnect_agent_on_offline(str(agent_id))
     
     return ApiResponse(data=agent)

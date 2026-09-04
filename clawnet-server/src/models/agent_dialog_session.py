@@ -1,11 +1,11 @@
 """
-AgentDialogSession 模型
+AgentDialogSession 模型 / EN: AgentDialogSession model
 
-用于管理 Agent 间对话的会话状态，包括：
-- 参与方信息（发起方/接收方 Agent 及其 Owner）
-- 授权状态
-- 会话控制（状态、轮数、超时）
-- 终止信息
+用于管理 Agent 间对话的会话状态，包括： / EN: Session state used to manage conversations between agents, including:
+- 参与方信息（发起方/接收方 Agent 及其 Owner） / EN: - Participant information (initiator/receiver Agent and its Owner)
+- 授权状态 / EN: - Authorization status
+- 会话控制（状态、轮数、超时） / EN: - Session control (status, rounds, timeout)
+- 终止信息 / EN: - Termination information
 """
 
 import uuid
@@ -47,14 +47,14 @@ class AgentDialogSession(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     
-    # 复用现有会话
+    # 复用现有会话 | EN: Reuse existing session
     conversation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey("conversations.id", ondelete="CASCADE"), 
         nullable=False
     )
     
-    # 参与方
+    # 参与方 | EN: Participants
     initiator_agent_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey("agents.id", ondelete="CASCADE"), 
@@ -76,14 +76,14 @@ class AgentDialogSession(Base):
         nullable=False
     )
     
-    # 议题
+    # 议题 | EN: issue
     topic: Mapped[str] = mapped_column(Text, nullable=False)
     
-    # 授权状态
+    # 授权状态 | EN: Authorization status
     initiator_approved: Mapped[bool] = mapped_column(Boolean, default=False)
     responder_approved: Mapped[bool] = mapped_column(Boolean, default=False)
     
-    # 会话控制
+    # 会话控制 | EN: session control
     status: Mapped[str] = mapped_column(
         String(20), 
         nullable=False, 
@@ -93,16 +93,16 @@ class AgentDialogSession(Base):
     max_rounds: Mapped[int] = mapped_column(Integer, default=10)
     idle_timeout_seconds: Mapped[int] = mapped_column(Integer, default=86400)
 
-    # 乐观锁版本号，用于防止并发修改导致的竞态条件
+    # 乐观锁版本号，用于防止并发修改导致的竞态条件 | EN: Optimistic lock version number, used to prevent race conditions caused by concurrent modifications
     version: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
     
-    # 终止信息
+    # 终止信息 | EN: Termination information
     termination_reason: Mapped[str | None] = mapped_column(String(30), nullable=True)
     
-    # 元数据（用于存储原始会话信息等）
+    # 元数据（用于存储原始会话信息等） | EN: Metadata (used to store original session information, etc.)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
     
-    # 时间戳
+    # 时间戳 | EN: Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default=lambda: datetime.now(timezone.utc)
@@ -120,7 +120,7 @@ class AgentDialogSession(Base):
         nullable=True
     )
 
-    # 关系
+    # 关系 | EN: relation
     conversation = relationship("Conversation")
     initiator_agent = relationship("Agent", foreign_keys=[initiator_agent_id])
     responder_agent = relationship("Agent", foreign_keys=[responder_agent_id])

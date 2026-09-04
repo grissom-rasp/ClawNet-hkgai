@@ -18,7 +18,7 @@ export type TagContext = {
   tagId: string;
   /** Human-readable tag name (slug, e.g. "work"). */
   tagName: string;
-  /** Display name (e.g. "工作"). */
+  /** Display name (e.g. "工作"). */ | EN: * Display name (e.g. "work"). */
   tagDisplayName?: string;
   /** Tag workspace ID — maps to ~/.openclaw/workspace/{workspaceId}/. */
   workspaceId: string;

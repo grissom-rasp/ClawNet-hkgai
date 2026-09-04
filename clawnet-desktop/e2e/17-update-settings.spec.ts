@@ -50,10 +50,10 @@ test.describe('P3F Updates section in Settings → General', () => {
     await window.getByRole('button', { name: /General$/ }).click();
 
     // --- Updates section visible ---
-    // i18n key `update:title` → "Updates" / "应用更新"
+    // i18n key `update:title` → "Updates" / "应用更新" | EN: i18n key `update:title` → "Updates" / "Apply updates"
     await expect(window.getByText(/^(Updates|应用更新)$/)).toBeVisible({ timeout: 5_000 });
 
-    // i18n key `update:checkForUpdates` → "Check for updates" / "检查更新"
+    // i18n key `update:checkForUpdates` → "Check for updates" / "检查更新" | EN: i18n key `update:checkForUpdates` → "Check for updates" / "Check for updates"
     // Idle state (no auto-check fires because CLAWNET_DISABLE_AUTO_UPDATE=1)
     // → UpdateButton renders the secondary "Check for updates" affordance.
     // We assert visibility only — clicking would issue `app.checkForUpdates`

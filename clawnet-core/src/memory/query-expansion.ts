@@ -3,7 +3,7 @@
  *
  * When no embedding provider is available, we fall back to FTS (full-text search).
  * FTS works best with specific keywords, but users often ask conversational queries
- * like "that thing we discussed yesterday" or "之前讨论的那个方案".
+ * like "that thing we discussed yesterday" or "之前讨论的那个方案". | EN: like "that thing we discussed yesterday" or "that plan discussed before".
  *
  * This module extracts meaningful keywords from such queries to improve FTS results.
  */
@@ -717,7 +717,7 @@ function tokenize(text: string): string[] {
  *
  * Examples:
  * - "that thing we discussed about the API" → ["discussed", "API"]
- * - "之前讨论的那个方案" → ["讨论", "方案"]
+ * - "之前讨论的那个方案" → ["讨论", "方案"] | EN: - "The plan discussed before" → ["discussion", "plan"]
  * - "what was the solution for the bug" → ["solution", "bug"]
  */
 export function extractKeywords(query: string): string[] {

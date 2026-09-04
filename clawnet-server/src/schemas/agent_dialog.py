@@ -1,7 +1,7 @@
 """
 Agent Dialog Session Schemas
 
-Pydantic 模型用于 Agent 间对话的请求和响应。
+Pydantic 模型用于 Agent 间对话的请求和响应。 / EN: The Pydantic model is used for requests and responses in inter-agent conversations.
 """
 
 import uuid
@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from src.models.agent_dialog_session import DialogSessionStatus, TerminationReason
 
 
-# ============ 请求模型 ============
+# ============ 请求模型 ============ | EN: ============ Request model ============
 
 class CreateDialogSessionRequest(BaseModel):
     """创建 Agent 对话会话请求"""
@@ -41,7 +41,7 @@ class ExtendDialogSessionRequest(BaseModel):
     additional_rounds: int = Field(..., ge=1, le=50, description="追加轮数")
 
 
-# ============ 响应模型 ============
+# ============ 响应模型 ============ | EN: ============ Response Model ============
 
 class AgentInfo(BaseModel):
     """Agent 简要信息"""
@@ -63,29 +63,29 @@ class DialogSessionResponse(BaseModel):
     id: uuid.UUID
     conversation_id: uuid.UUID
     
-    # 参与方信息
+    # 参与方信息 | EN: Participant information
     initiator_agent: AgentInfo
     responder_agent: AgentInfo
     initiator_owner: UserInfo
     responder_owner: UserInfo
     
-    # 议题
+    # 议题 | EN: issue
     topic: str
     
-    # 授权状态
+    # 授权状态 | EN: Authorization status
     initiator_approved: bool
     responder_approved: bool
     
-    # 会话控制
+    # 会话控制 | EN: session control
     status: str
     current_round: int
     max_rounds: int
     idle_timeout_seconds: int
     
-    # 终止信息
+    # 终止信息 | EN: Termination information
     termination_reason: Optional[str] = None
     
-    # 时间戳
+    # 时间戳 | EN: Timestamp
     created_at: datetime
     started_at: Optional[datetime] = None
     last_message_at: Optional[datetime] = None
@@ -100,7 +100,7 @@ class DialogSessionListResponse(BaseModel):
     total: int
 
 
-# ============ WebSocket 事件模型 ============
+# ============ WebSocket 事件模型 ============ | EN: ============ WebSocket Event Model ============
 
 class DialogApprovalRequestEvent(BaseModel):
     """对话授权请求事件（发送给 Owner）"""
@@ -108,11 +108,11 @@ class DialogApprovalRequestEvent(BaseModel):
     session_id: uuid.UUID
     topic: str
     
-    # 发起方信息
+    # 发起方信息 | EN: Initiator information
     initiator_agent: AgentInfo
     initiator_owner: UserInfo
     
-    # 接收方信息（当前用户的 Agent）
+    # 接收方信息（当前用户的 Agent） | EN: Receiver information (current user’s Agent)
     responder_agent: AgentInfo
     
     created_at: datetime
@@ -151,7 +151,7 @@ class DialogTerminatedEvent(BaseModel):
     timestamp: datetime
 
 
-# ============ 内部模型 ============
+# ============ 内部模型 ============ | EN: ============ Internal Model ============
 
 class DialogStatusMarker(BaseModel):
     """对话状态标记（从 Agent 回复中提取）"""

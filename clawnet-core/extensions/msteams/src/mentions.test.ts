@@ -97,7 +97,7 @@ describe("parseMentions", () => {
 
   it("skips mention-like patterns with non-Teams IDs (e.g. in code blocks)", () => {
     // This reproduces the actual failing payload: the message contains a real mention
-    // plus `@[表示名](ユーザーID)` as documentation text inside backticks.
+    // plus `@[表示名](ユーザーID)` as documentation text inside backticks. | EN: plus `@[display name](ユーザーID)` as documentation text inside backticks.
     const input =
       "@[タナカ タロウ](a1b2c3d4-e5f6-7890-abcd-ef1234567890) スキル化完了しました！📋\n\n" +
       "**作成したスキル:** `teams-mention`\n" +

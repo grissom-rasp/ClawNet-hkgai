@@ -17,7 +17,7 @@ struct InviteMembersSheet: View {
     private var isNewGroup: Bool { existingConversationId == nil }
 
     private var filteredContacts: [Contact] {
-        // 群聊只显示人类联系人，不显示 agent
+        // 群聊只显示人类联系人，不显示 agent | EN: Group chat only shows human contacts, not agents
         let base = contactService.contacts.filter { $0.type == .human }
         if searchText.isEmpty { return base }
         return base.filter {

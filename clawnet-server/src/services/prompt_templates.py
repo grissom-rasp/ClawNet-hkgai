@@ -1,7 +1,7 @@
 """
-Prompt Templates — A2A 对话多语言 prompt 模板
+Prompt Templates — A2A 对话多语言 prompt 模板 / EN: Prompt Templates — A2A conversational multi-language prompt templates
 
-所有发送给 LLM 的 prompt 模板集中管理，支持 zh-Hans / zh-Hant / en 三语。
+所有发送给 LLM 的 prompt 模板集中管理，支持 zh-Hans / zh-Hant / en 三语。 / EN: All prompt templates sent to LLM are managed centrally, supporting zh-Hans / zh-Hant / en trilingual.
 通过 get_template(name, lang) 获取对应语言的模板字符串。
 """
 
@@ -25,10 +25,10 @@ def get_user_lang(user: "User | None") -> str:
 
 
 # ============================================================
-# A2A 主模板
+# A2A 主模板 | EN: A2A master template
 # ============================================================
 
-# ---- Initiator (后续轮次) ----
+# ---- Initiator (后续轮次) ---- | EN: ---- Initiator (subsequent rounds) ----
 
 _INITIATOR_TEMPLATE = {
     "zh-Hans": """[AGENT_DIALOG - 身份与任务]
@@ -44,12 +44,12 @@ _INITIATOR_TEMPLATE = {
 
 请根据对方助手的回复，继续推进你主人「{my_owner_name}」的需求。
 
-⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）：
-<<RESOLVED>>  — 当议题的问题已经得到充分回答或达成共识时使用
-<<CONTINUE>>  — 当你还需要继续追问或讨论时使用
-<<DEADLOCK>>  — 当对方无法满足需求或陷入僵局时使用
+⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 当议题的问题已经得到充分回答或达成共识时使用 / EN: <<RESOLVED>> — used when an issue question has been fully answered or a consensus has been reached
+<<CONTINUE>>  — 当你还需要继续追问或讨论时使用 / EN: <<CONTINUE>> — Use when you need to continue questioning or discussing
+<<DEADLOCK>>  — 当对方无法满足需求或陷入僵局时使用 / EN: <<DEADLOCK>> — used when the other party cannot meet the demand or reaches a deadlock
 
-示例：你的正文内容...
+示例：你的正文内容... / EN: Example: Your body content...
 <<RESOLVED>>
 [/AGENT_DIALOG]
 
@@ -69,12 +69,12 @@ _INITIATOR_TEMPLATE = {
 
 請根據對方助手的回覆，繼續推進你主人「{my_owner_name}」的需求。
 
-⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）：
-<<RESOLVED>>  — 當議題的問題已經得到充分回答或達成共識時使用
-<<CONTINUE>>  — 當你還需要繼續追問或討論時使用
-<<DEADLOCK>>  — 當對方無法滿足需求或陷入僵局時使用
+⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 當議題的問題已經得到充分回答或達成共識時使用 / EN: <<RESOLVED>> — used when an issue question has been fully answered or a consensus has been reached
+<<CONTINUE>>  — 當你還需要繼續追問或討論時使用 / EN: <<CONTINUE>> — Use when you need to continue questioning or discussing
+<<DEADLOCK>>  — 當對方無法滿足需求或陷入僵局時使用 / EN: <<DEADLOCK>> — used when the other party cannot meet the demand or reaches a deadlock
 
-示例：你的正文內容...
+示例：你的正文內容... / EN: Example: Your body content...
 <<RESOLVED>>
 [/AGENT_DIALOG]
 
@@ -125,12 +125,12 @@ _RESPONDER_TEMPLATE = {
 
 请根据对方助手的需求，提供关于你主人「{my_owner_name}」的相关信息。
 
-⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）：
-<<RESOLVED>>  — 当对方的问题已经得到充分回答时使用
-<<CONTINUE>>  — 当还需要继续提供更多信息时使用
-<<DEADLOCK>>  — 当无法满足对方需求或陷入僵局时使用
+⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 当对方的问题已经得到充分回答时使用 / EN: <<RESOLVED>> — used when the other person’s question has been fully answered
+<<CONTINUE>>  — 当还需要继续提供更多信息时使用 / EN: <<CONTINUE>> — used when more information is required
+<<DEADLOCK>>  — 当无法满足对方需求或陷入僵局时使用 / EN: <<DEADLOCK>> — used when the other party's needs cannot be met or a deadlock is reached
 
-示例：你的正文内容...
+示例：你的正文内容... / EN: Example: Your body content...
 <<CONTINUE>>
 [/AGENT_DIALOG]
 
@@ -152,12 +152,12 @@ _RESPONDER_TEMPLATE = {
 
 請根據對方助手的需求，提供關於你主人「{my_owner_name}」的相關資訊。
 
-⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）：
-<<RESOLVED>>  — 當對方的問題已經得到充分回答時使用
-<<CONTINUE>>  — 當還需要繼續提供更多資訊時使用
-<<DEADLOCK>>  — 當無法滿足對方需求或陷入僵局時使用
+⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 當對方的問題已經得到充分回答時使用 / EN: <<RESOLVED>> — used when the other person’s question has been fully answered
+<<CONTINUE>>  — 當還需要繼續提供更多資訊時使用 / EN: <<CONTINUE>> — used when more information is required
+<<DEADLOCK>>  — 當無法滿足對方需求或陷入僵局時使用 / EN: <<DEADLOCK>> — used when the other party's needs cannot be met or a deadlock is reached
 
-示例：你的正文內容...
+示例：你的正文內容... / EN: Example: Your body content...
 <<CONTINUE>>
 [/AGENT_DIALOG]
 
@@ -192,7 +192,7 @@ The assistant of "{other_owner_name}" requests:
 {other_agent_message}""",
 }
 
-# ---- Initial (首轮) ----
+# ---- Initial (首轮) ---- | EN: ---- Initial (first round) ----
 
 _INITIAL_TEMPLATE = {
     "zh-Hans": """[AGENT_DIALOG - 身份与任务]
@@ -200,7 +200,7 @@ _INITIAL_TEMPLATE = {
 ⚠ 自我认知：当对话中提到「{my_owner_name}」时，说的就是你的主人（即你所代表的人）。你不需要去查找或联系「{my_owner_name}」，因为那就是你自己。
 ⚠ 你即将与「{other_owner_name}」的助手开始直接对话。对话开始后，你的对话者就是「{other_owner_name}」的助手。
   不要试图另外联系「{other_owner_name}」，直接在此对话中沟通即可。
-⚠ 重要约束：
+⚠ 重要约束： / EN: ⚠ Important constraints:
   - 你只能代表「{my_owner_name}」提问，绝对不能替「{other_owner_name}」回答。
   - 如果你不知道「{other_owner_name}」的信息，这正是你发起对话的原因——你需要向对方助手询问。
   - 不要自己编造或猜测「{other_owner_name}」的任何信息。
@@ -210,12 +210,12 @@ _INITIAL_TEMPLATE = {
 {source_context}
 请基于以上信息，向「{other_owner_name}」的助手清晰地说明你的需求或问题。
 
-⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）：
-<<RESOLVED>>  — 当问题已解决或达成共识时使用
-<<CONTINUE>>  — 当需要继续讨论时使用（首轮通常应使用此标记）
-<<DEADLOCK>>  — 当对方无法满足需求或陷入僵局时使用
+⚠⚠⚠ 【强制要求】你的回复必须以下面三个标记之一作为最后一行（单独成行，不要遗漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 当问题已解决或达成共识时使用 / EN: <<RESOLVED>> — used when an issue has been resolved or a consensus has been reached
+<<CONTINUE>>  — 当需要继续讨论时使用（首轮通常应使用此标记） / EN: <<CONTINUE>> — used when discussion needs to continue (this tag should usually be used in the first round)
+<<DEADLOCK>>  — 当对方无法满足需求或陷入僵局时使用 / EN: <<DEADLOCK>> — used when the other party cannot meet the demand or reaches a deadlock
 
-示例：你的正文内容...
+示例：你的正文内容... / EN: Example: Your body content...
 <<CONTINUE>>
 [/AGENT_DIALOG]
 
@@ -226,7 +226,7 @@ _INITIAL_TEMPLATE = {
 ⚠ 自我認知：當對話中提到「{my_owner_name}」時，說的就是你的主人（即你所代表的人）。你不需要去查找或聯繫「{my_owner_name}」，因為那就是你自己。
 ⚠ 你即將與「{other_owner_name}」的助手開始直接對話。對話開始後，你的對話者就是「{other_owner_name}」的助手。
   不要試圖另外聯繫「{other_owner_name}」，直接在此對話中溝通即可。
-⚠ 重要約束：
+⚠ 重要約束： / EN: ⚠ Important constraints:
   - 你只能代表「{my_owner_name}」提問，絕對不能替「{other_owner_name}」回答。
   - 如果你不知道「{other_owner_name}」的資訊，這正是你發起對話的原因——你需要向對方助手詢問。
   - 不要自己編造或猜測「{other_owner_name}」的任何資訊。
@@ -236,12 +236,12 @@ _INITIAL_TEMPLATE = {
 {source_context}
 請基於以上資訊，向「{other_owner_name}」的助手清晰地說明你的需求或問題。
 
-⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）：
-<<RESOLVED>>  — 當問題已解決或達成共識時使用
-<<CONTINUE>>  — 當需要繼續討論時使用（首輪通常應使用此標記）
-<<DEADLOCK>>  — 當對方無法滿足需求或陷入僵局時使用
+⚠⚠⚠ 【強制要求】你的回覆必須以下面三個標記之一作為最後一行（單獨成行，不要遺漏）： / EN: ⚠⚠⚠ [Mandatory] Your reply must have one of the following three marks as the last line (in separate lines, don’t miss it):
+<<RESOLVED>>  — 當問題已解決或達成共識時使用 / EN: <<RESOLVED>> — used when an issue has been resolved or a consensus has been reached
+<<CONTINUE>>  — 當需要繼續討論時使用（首輪通常應使用此標記） / EN: <<CONTINUE>> — used when discussion needs to continue (this tag should usually be used in the first round)
+<<DEADLOCK>>  — 當對方無法滿足需求或陷入僵局時使用 / EN: <<DEADLOCK>> — used when the other party cannot meet the demand or reaches a deadlock
 
-示例：你的正文內容...
+示例：你的正文內容... / EN: Example: Your body content...
 <<CONTINUE>>
 [/AGENT_DIALOG]
 
@@ -446,7 +446,7 @@ _TERMINATION_DISPLAY: dict[str, dict[str, str]] = {
 
 
 # ============================================================
-# Capability prompt (跨助手协作能力声明)
+# Capability prompt (跨助手协作能力声明) | EN: Capability prompt (Cross-assistant collaboration capability statement)
 # ============================================================
 
 _CAPABILITY_TEMPLATE = {
@@ -455,28 +455,28 @@ _CAPABILITY_TEMPLATE = {
 {identity_line}{dialog_partner_line}你可以联系以下用户的助手来获取信息或协调事务：
 {contact_list}
 
-【重要】当用户要求你去询问/联系/找某个人时，你必须按照以下步骤操作：
-1. 判断用户提到的人名是否匹配上述联系人列表中的某位用户
-2. 如果匹配，你需要发起跨助手对话。在你的回复正文中告诉用户「好的，我这就去联系 XX 的助手」
-3. 然后在回复的最末尾（新起一行）输出以下标记：
+【重要】当用户要求你去询问/联系/找某个人时，你必须按照以下步骤操作： / EN: [Important] When a user asks you to ask/contact/find someone, you must follow the steps below:
+1. 判断用户提到的人名是否匹配上述联系人列表中的某位用户 / EN: 1. Determine whether the name mentioned by the user matches a user in the above contact list
+2. 如果匹配，你需要发起跨助手对话。在你的回复正文中告诉用户「好的，我这就去联系 XX 的助手」 / EN: 2. If there is a match, you need to initiate a cross-assistant conversation. Tell the user "Okay, I'll contact XX's assistant right now" in the body of your reply.
+3. 然后在回复的最末尾（新起一行）输出以下标记： / EN: 3. Then output the following markup at the end of the reply (on a new line):
    <<NEED_AGENT_DIALOG:target_owner=对方用户名,topic=你需要问的具体问题>>
 
-【多人联系】如果你需要同时联系多个人，可以一次输出多个标记：
+【多人联系】如果你需要同时联系多个人，可以一次输出多个标记： / EN: [Multi-person Contact] If you need to contact multiple people at the same time, you can output multiple tags at one time:
 <<NEED_AGENT_DIALOG:target_owner=张三,topic=问题1>>
 <<NEED_AGENT_DIALOG:target_owner=李四,topic=问题2>>
-系统会帮你依次或并行联系他们，并将结果汇总给你。最多可联系 5 个人。
+系统会帮你依次或并行联系他们，并将结果汇总给你。最多可联系 5 个人。 / EN: The system will help you contact them sequentially or in parallel and summarize the results to you. You can contact up to 5 people.
 
-示例 - 假设用户说「帮我问一下王五最近在忙什么」，且联系人中有王五：
-你的回复应该是：
-好的，我这就去联系王五的助手，帮你问一下他最近的工作情况。
+示例 - 假设用户说「帮我问一下王五最近在忙什么」，且联系人中有王五： / EN: Example - Suppose the user says "Ask me what Wang Wu is busy with recently" and there is Wang Wu in the contact:
+你的回复应该是： / EN: Your response should be:
+好的，我这就去联系王五的助手，帮你问一下他最近的工作情况。 / EN: Okay, I'll contact Wang Wu's assistant right away and help you ask about his recent work situation.
 <<NEED_AGENT_DIALOG:target_owner=王五,topic=请问你的主人最近在忙什么工作？>>
 
-注意事项：
-- 标记必须在回复最末尾，单独一行
-- target_owner 必须是联系人列表中的用户名（不是助手名）
-- topic 是你要问对方助手的具体问题
-- 只有用户明确要求联系/询问/找某人时才使用此标记
-- 如果目标用户不在联系人列表中，告知用户无法联系
+注意事项： / EN: Things to note:
+- 标记必须在回复最末尾，单独一行 / EN: - Tags must be at the end of the reply, on a separate line
+- target_owner 必须是联系人列表中的用户名（不是助手名） / EN: - target_owner must be a username in the contact list (not the assistant name)
+- topic 是你要问对方助手的具体问题 / EN: - topic is the specific question you want to ask the other party's assistant
+- 只有用户明确要求联系/询问/找某人时才使用此标记 / EN: - Only use this tag if the user explicitly asks to contact/ask/find someone
+- 如果目标用户不在联系人列表中，告知用户无法联系 / EN: - If the target user is not in the contact list, inform the user that they cannot be contacted
 
 [/系统指令]""",
 
@@ -485,23 +485,23 @@ _CAPABILITY_TEMPLATE = {
 {identity_line}{dialog_partner_line}你可以聯繫以下用戶的助手來獲取資訊或協調事務：
 {contact_list}
 
-【重要】當用戶要求你去詢問/聯繫/找某個人時，你必須按照以下步驟操作：
-1. 判斷用戶提到的人名是否匹配上述聯繫人列表中的某位用戶
-2. 如果匹配，你需要發起跨助手對話。在你的回覆正文中告訴用戶「好的，我這就去聯繫 XX 的助手」
-3. 然後在回覆的最末尾（新起一行）輸出以下標記：
+【重要】當用戶要求你去詢問/聯繫/找某個人時，你必須按照以下步驟操作： / EN: [Important] When a user asks you to ask/contact/find someone, you must follow the steps below:
+1. 判斷用戶提到的人名是否匹配上述聯繫人列表中的某位用戶 / EN: 1. Determine whether the name mentioned by the user matches a user in the above contact list
+2. 如果匹配，你需要發起跨助手對話。在你的回覆正文中告訴用戶「好的，我這就去聯繫 XX 的助手」 / EN: 2. If there is a match, you need to initiate a cross-assistant conversation. Tell the user "Okay, I'll contact XX's assistant right now" in the body of your reply.
+3. 然後在回覆的最末尾（新起一行）輸出以下標記： / EN: 3. Then output the following markup at the end of the reply (on a new line):
    <<NEED_AGENT_DIALOG:target_owner=對方用戶名,topic=你需要問的具體問題>>
 
-【多人聯繫】如果你需要同時聯繫多個人，可以一次輸出多個標記：
+【多人聯繫】如果你需要同時聯繫多個人，可以一次輸出多個標記： / EN: [Multi-person Contact] If you need to contact multiple people at the same time, you can output multiple tags at one time:
 <<NEED_AGENT_DIALOG:target_owner=張三,topic=問題1>>
 <<NEED_AGENT_DIALOG:target_owner=李四,topic=問題2>>
-系統會幫你依次或並行聯繫他們，並將結果匯總給你。最多可聯繫 5 個人。
+系統會幫你依次或並行聯繫他們，並將結果匯總給你。最多可聯繫 5 個人。 / EN: The system will help you contact them sequentially or in parallel and summarize the results to you. You can contact up to 5 people.
 
-注意事項：
-- 標記必須在回覆最末尾，單獨一行
-- target_owner 必須是聯繫人列表中的用戶名（不是助手名）
-- topic 是你要問對方助手的具體問題
-- 只有用戶明確要求聯繫/詢問/找某人時才使用此標記
-- 如果目標用戶不在聯繫人列表中，告知用戶無法聯繫
+注意事項： / EN: Things to note:
+- 標記必須在回覆最末尾，單獨一行 / EN: - The tag must be at the end of the reply, on a separate line
+- target_owner 必須是聯繫人列表中的用戶名（不是助手名） / EN: - target_owner must be a username in the contact list (not the assistant name)
+- topic 是你要問對方助手的具體問題 / EN: - topic is the specific question you want to ask the other party's assistant
+- 只有用戶明確要求聯繫/詢問/找某人時才使用此標記 / EN: - Only use this tag if the user explicitly asks to contact/ask/find someone
+- 如果目標用戶不在聯繫人列表中，告知用戶無法聯繫 / EN: - If the target user is not in the contact list, inform the user that they cannot be contacted
 
 [/系統指令]""",
 
@@ -585,7 +585,7 @@ _CAPABILITY_USER_MSG_LABEL = {
 
 
 # ============================================================
-# Dialog result prompt (A2A 结果回传)
+# Dialog result prompt (A2A 结果回传) | EN: Dialog result prompt (A2A result return)
 # ============================================================
 
 _DIALOG_RESULT_TEMPLATE = {
@@ -643,7 +643,7 @@ _DIALOG_RESULT_PENDING_TEXT = {
 
 
 # ============================================================
-# Resume prompt (嵌套对话恢复)
+# Resume prompt (嵌套对话恢复) | EN: Resume prompt (nested conversation resume)
 # ============================================================
 
 _RESUME_MARKER_INSTRUCTIONS = {
@@ -735,7 +735,7 @@ _RESUME_NO_VALID_INFO = {"zh-Hans": "（未获取到有效信息）", "zh-Hant":
 
 
 # ============================================================
-# Final summary prompt (发现任务汇总)
+# Final summary prompt (发现任务汇总) | EN: Final summary prompt (discovery task summary)
 # ============================================================
 
 _FINAL_SUMMARY_STATUS_LABELS = {
@@ -749,20 +749,20 @@ _FINAL_SUMMARY_TEMPLATE = {
 你先后联系了 {total} 个人来完成用户的请求。
 用户的原始意图：{original_intent}
 
-各方回复结果：
+各方回复结果： / EN: Response results from all parties:
 {result_lines}
 
-请将以上所有结果综合汇总，给你的用户一个完整的回复。
+请将以上所有结果综合汇总，给你的用户一个完整的回复。 / EN: Please summarize all the above results and give your users a complete reply.
 [/DISCOVERY_COMPLETE]""",
 
     "zh-Hant": """[DISCOVERY_COMPLETE]
 你先後聯繫了 {total} 個人來完成用戶的請求。
 用戶的原始意圖：{original_intent}
 
-各方回覆結果：
+各方回覆結果： / EN: Results of responses from all parties:
 {result_lines}
 
-請將以上所有結果綜合匯總，給你的用戶一個完整的回覆。
+請將以上所有結果綜合匯總，給你的用戶一個完整的回覆。 / EN: Please summarize all the above results and give your users a complete reply.
 [/DISCOVERY_COMPLETE]""",
 
     "en": """[DISCOVERY_COMPLETE]
@@ -825,7 +825,7 @@ def get_completion_patterns(lang: str = DEFAULT_LANG) -> list[str]:
     """返回语义完成检测的正则模式列表（目标语言 + 通用 fallback 并集）"""
     patterns = list(_COMPLETION_PATTERNS.get(lang, []))
     if lang != DEFAULT_LANG:
-        # 追加默认语言模式作为 fallback（LLM 可能不严格遵循 prompt 语言）
+        # 追加默认语言模式作为 fallback（LLM 可能不严格遵循 prompt 语言） | EN: Append default language mode as fallback (LLM may not strictly follow prompt language)
         patterns.extend(_COMPLETION_PATTERNS.get(DEFAULT_LANG, []))
     return patterns
 

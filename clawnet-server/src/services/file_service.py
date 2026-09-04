@@ -45,7 +45,7 @@ async def complete_upload(
     user_id: uuid.UUID,
     req: CompleteUploadRequest,
 ) -> FileResponse:
-    # Check if already exists (instant upload / 秒传)
+    # Check if already exists (instant upload / 秒传) | EN: Check if already exists (instant upload / second upload)
     existing_result = await db.execute(select(File).where(File.hash == req.hash))
     existing = existing_result.scalar_one_or_none()
     if existing:

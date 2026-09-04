@@ -1,6 +1,6 @@
 FROM node:22-bookworm@sha256:cd7bcd2e7a1e6f72052feb023c7f6b722205d3fcab7bbcbd2d1bfdab10b1e935
 
-# 修改 node 用户的 UID/GID 为 1001，匹配宿主机用户
+# 修改 node 用户的 UID/GID 为 1001，匹配宿主机用户 | EN: Modify the UID/GID of the node user to 1001 to match the host user
 ARG NODE_UID=1001
 ARG NODE_GID=1001
 RUN groupmod -g ${NODE_GID} node && \
@@ -58,8 +58,8 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
-# 预安装 clawhub 包
-# clawhub 会将包安装到 /app/skills/ 目录，这是镜像的一部分，不会被 volume 覆盖
+# 预安装 clawhub 包 | EN: Pre-installed clawhub package
+# clawhub 会将包安装到 /app/skills/ 目录，这是镜像的一部分，不会被 volume 覆盖 | EN: clawhub will install the package to the /app/skills/ directory, which is part of the image and will not be overwritten by volume
 ARG OPENCLAW_CLAWHUB_PACKAGES=""
 COPY --chown=node:node clawhub-packages.txt* /tmp/
 USER node

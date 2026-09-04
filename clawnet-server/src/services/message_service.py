@@ -57,8 +57,8 @@ async def send_message(
     if not skip_unread:
         # Increment unread count for other human participants only
         # (Agent participants don't need unread tracking)
-        # 在 A2A 对话中，unread 由前端 addMessage + markAsRead 管理，
-        # 后端不递增以避免两个 Owner 都被 +1 导致计数不准。
+        # 在 A2A 对话中，unread 由前端 addMessage + markAsRead 管理， | EN: In the A2A conversation, unread is managed by the front-end addMessage + markAsRead,
+        # 后端不递增以避免两个 Owner 都被 +1 导致计数不准。 | EN: The backend does not increment to avoid inaccurate counting caused by both Owners being +1.
         other_participants_result = await db.execute(
             select(ConversationParticipant).where(
                 ConversationParticipant.conversation_id == conv_id,
@@ -68,7 +68,7 @@ async def send_message(
         )
         for p in other_participants_result.scalars().all():
             p.unread_count = (p.unread_count or 0) + 1
-            # 新消息到来时，自动重置隐藏状态（让会话重新出现在列表中）
+            # 新消息到来时，自动重置隐藏状态（让会话重新出现在列表中） | EN: Automatically reset hidden status when new messages arrive (making the conversation reappear in the list)
             if p.hidden_at is not None:
                 p.hidden_at = None
 
@@ -222,7 +222,7 @@ async def delete_message(db: AsyncSession, message_id: uuid.UUID, user_id: uuid.
         from src.utils.errors import NotFoundError
         raise NotFoundError("消息")
     
-    # 检查用户是否是该会话的参与者
+    # 检查用户是否是该会话的参与者 | EN: Check if the user is a participant in the session
     participant_result = await db.execute(
         select(ConversationParticipant).where(
             ConversationParticipant.conversation_id == msg.conversation_id,
@@ -233,7 +233,7 @@ async def delete_message(db: AsyncSession, message_id: uuid.UUID, user_id: uuid.
         from src.utils.errors import ForbiddenError
         raise ForbiddenError("非会话参与者")
     
-    # 检查是否已经隐藏
+    # 检查是否已经隐藏 | EN: Check if it has been hidden
     existing = await db.execute(
         select(MessageHidden).where(
             MessageHidden.message_id == message_id,
@@ -252,7 +252,7 @@ async def delete_messages_batch(db: AsyncSession, message_ids: list[uuid.UUID], 
     if not message_ids:
         return
     
-    # 验证所有消息属于用户参与的会话
+    # 验证所有消息属于用户参与的会话 | EN: Verify that all messages belong to a session in which the user participates
     for mid in message_ids:
         result = await db.execute(select(Message).where(Message.id == mid))
         msg = result.scalar_one_or_none()
@@ -268,7 +268,7 @@ async def delete_messages_batch(db: AsyncSession, message_ids: list[uuid.UUID], 
         if not participant_result.scalar_one_or_none():
             continue
         
-        # 检查是否已经隐藏
+        # 检查是否已经隐藏 | EN: Check if it has been hidden
         existing = await db.execute(
             select(MessageHidden).where(
                 MessageHidden.message_id == mid,
@@ -339,7 +339,7 @@ async def _get_sender_info(db: AsyncSession, sender_id: uuid.UUID, sender_type: 
         result = await db.execute(select(Agent).where(Agent.id == sender_id))
         agent = result.scalar_one_or_none()
         if agent:
-            # 获取 Agent 所属用户的名字
+            # 获取 Agent 所属用户的名字 | EN: Get the name of the user that the Agent belongs to
             owner_result = await db.execute(select(User).where(User.id == agent.owner_id))
             owner = owner_result.scalar_one_or_none()
             owner_name = owner.display_name if owner else None

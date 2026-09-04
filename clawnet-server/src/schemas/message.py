@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 from pydantic import BaseModel, field_validator
 
-# 允许的 content_type 白名单
+# 允许的 content_type 白名单 | EN: Allowed content_type whitelist
 ALLOWED_CONTENT_TYPES = (
     "text", "file", "image", "video", "voice",
     "rich_card", "task_request", "task_progress", "task_result",
@@ -13,7 +13,7 @@ ALLOWED_CONTENT_TYPES = (
     "dialog_status", "system",
 )
 
-# 序列化后的最大消息体大小 (64 KB)
+# 序列化后的最大消息体大小 (64 KB) | EN: Maximum message body size after serialization (64 KB)
 MAX_CONTENT_SIZE = 64 * 1024
 
 

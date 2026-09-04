@@ -6,7 +6,7 @@
  *
  *   Today              → HH:MM
  *   Yesterday          → localized "Yesterday"
- *   2-6 days ago       → localized weekday (Mon / 周一 / etc.)
+ *   2-6 days ago       → localized weekday (Mon / 周一 / etc.) | EN: 2-6 days ago → localized weekday (Mon / etc.)
  *   Earlier this year  → M-D
  *   Older              → YYYY/M/D
  *

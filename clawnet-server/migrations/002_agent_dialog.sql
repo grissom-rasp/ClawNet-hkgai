@@ -1,49 +1,49 @@
 -- ClawNet Agent Dialog Session Schema
 -- Version: 1.1.0
--- Description: 支持 Agent-to-Agent 通信的对话会话管理
+-- Description: 支持 Agent-to-Agent 通信的对话会话管理 | EN: Description: Dialog session management supporting Agent-to-Agent communication
 
 -- Agent Dialog Sessions table
--- 用于管理 Agent 间对话的会话状态
+-- 用于管理 Agent 间对话的会话状态 | EN: Session state used to manage conversations between agents
 CREATE TABLE IF NOT EXISTS agent_dialog_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    -- 复用现有会话
+    -- 复用现有会话 | EN: Reuse existing session
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     
-    -- 参与方
+    -- 参与方 | EN: Participants
     initiator_agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
     responder_agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
     initiator_owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     responder_owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
-    -- 议题
+    -- 议题 | EN: issue
     topic TEXT NOT NULL,
     
-    -- 授权状态
+    -- 授权状态 | EN: Authorization status
     initiator_approved BOOLEAN NOT NULL DEFAULT FALSE,
     responder_approved BOOLEAN NOT NULL DEFAULT FALSE,
     
-    -- 会话控制
+    -- 会话控制 | EN: session control
     -- status: pending_approval | active | paused | completed | terminated
     status VARCHAR(20) NOT NULL DEFAULT 'pending_approval',
     current_round INTEGER NOT NULL DEFAULT 0,
     max_rounds INTEGER NOT NULL DEFAULT 10,
     idle_timeout_seconds INTEGER NOT NULL DEFAULT 300,
     
-    -- 终止信息
+    -- 终止信息 | EN: Termination information
     -- termination_reason: resolved | deadlock | rounds_exceeded | owner_terminated | owner_rejected | timeout | agent_offline | nested_dialog
     termination_reason VARCHAR(30),
     
-    -- 元数据（用于存储原始会话信息等）
+    -- 元数据（用于存储原始会话信息等） | EN: Metadata (used to store original session information, etc.)
     metadata JSONB,
     
-    -- 时间戳
+    -- 时间戳 | EN: Timestamp
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     started_at TIMESTAMPTZ,           -- 双方都 approve 的时刻
     last_message_at TIMESTAMPTZ,
     completed_at TIMESTAMPTZ,
     
-    -- 约束
+    -- 约束 | EN: constraint
     CONSTRAINT check_different_agents CHECK (initiator_agent_id != responder_agent_id),
     CONSTRAINT check_valid_status CHECK (status IN ('pending_approval', 'active', 'paused', 'completed', 'terminated')),
     CONSTRAINT check_valid_termination_reason CHECK (

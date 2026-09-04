@@ -552,7 +552,7 @@ final class ChatEventHandler {
     func upsertDiscoveryMessage(messageId: String, conversationId: String, data: [String: Any], serverTimestamp: Date? = nil) {
         ensureCache(for: conversationId)
         if let idx = messagesByConversation[conversationId]!.messages.firstIndex(where: { $0.id == messageId }) {
-            // Merge update: overlay new data onto existing rawData (不改时间戳，保持原始位置)
+            // Merge update: overlay new data onto existing rawData (不改时间戳，保持原始位置) | EN: Merge update: overlay new data onto existing rawData (do not change timestamp, keep original position)
             var existingRaw = messagesByConversation[conversationId]!.messages[idx].content.rawData ?? [:]
             for (key, value) in data {
                 existingRaw[key] = value

@@ -36,7 +36,7 @@ class ConversationParticipant(Base):
     last_read_message_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")  # owner | admin | member
-    # 软删除：用户隐藏会话的时间，NULL 表示可见
+    # 软删除：用户隐藏会话的时间，NULL 表示可见 | EN: Soft deletion: the time the user hides the session, NULL means visible
     hidden_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
     conversation = relationship("Conversation", back_populates="participants")

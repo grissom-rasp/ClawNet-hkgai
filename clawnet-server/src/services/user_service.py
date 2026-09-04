@@ -154,7 +154,7 @@ async def delete_contact(db: AsyncSession, user_id: uuid.UUID, contact_id: uuid.
         raise NotFoundError("联系人")
     await db.delete(contact)
 
-    # 同时删除反向好友关系
+    # 同时删除反向好友关系 | EN: Also delete the reverse friend relationship
     reverse_result = await db.execute(
         select(Contact).where(
             Contact.user_id == contact_id,
@@ -168,7 +168,7 @@ async def delete_contact(db: AsyncSession, user_id: uuid.UUID, contact_id: uuid.
     await db.flush()
 
 
-# ── 好友请求 ──
+# ── 好友请求 ── | EN: ── Friend request ──
 
 async def send_friend_request(
     db: AsyncSession, from_user_id: uuid.UUID, req: SendFriendRequestRequest
@@ -176,13 +176,13 @@ async def send_friend_request(
     if from_user_id == req.to_user_id:
         raise ValidationError("不能添加自己为好友")
 
-    # 检查目标用户是否存在
+    # 检查目标用户是否存在 | EN: Check if the target user exists
     to_user = await db.execute(select(User).where(User.id == req.to_user_id))
     to_user = to_user.scalar_one_or_none()
     if not to_user:
         raise NotFoundError("用户")
 
-    # 检查是否已经是好友
+    # 检查是否已经是好友 | EN: Check if you are already a friend
     existing_contact = await db.execute(
         select(Contact).where(
             Contact.user_id == from_user_id,
@@ -192,7 +192,7 @@ async def send_friend_request(
     if existing_contact.scalar_one_or_none():
         raise ValidationError("对方已经是你的好友")
 
-    # 检查是否已有 pending 请求
+    # 检查是否已有 pending 请求 | EN: Check if there are any pending requests
     existing_req = await db.execute(
         select(FriendRequest).where(
             FriendRequest.from_user_id == from_user_id,
@@ -203,7 +203,7 @@ async def send_friend_request(
     if existing_req.scalar_one_or_none():
         raise ValidationError("已发送过好友请求，请等待对方处理")
 
-    # 检查对方是否已经向我发送了请求（如果是，直接自动接受）
+    # 检查对方是否已经向我发送了请求（如果是，直接自动接受） | EN: Check whether the other party has sent me a request (if so, accept it automatically)
     reverse_req = await db.execute(
         select(FriendRequest).where(
             FriendRequest.from_user_id == req.to_user_id,
@@ -213,7 +213,7 @@ async def send_friend_request(
     )
     reverse = reverse_req.scalar_one_or_none()
     if reverse:
-        # 自动互相接受
+        # 自动互相接受 | EN: Automatically accept each other
         return await accept_friend_request(db, from_user_id, reverse.id)
 
     from_user = await db.execute(select(User).where(User.id == from_user_id))
@@ -297,7 +297,7 @@ async def accept_friend_request(
 
     fr.status = "accepted"
 
-    # 双向添加好友
+    # 双向添加好友 | EN: Add friends in both directions
     for (uid, cid) in [(fr.from_user_id, fr.to_user_id), (fr.to_user_id, fr.from_user_id)]:
         existing = await db.execute(
             select(Contact).where(Contact.user_id == uid, Contact.contact_id == cid)

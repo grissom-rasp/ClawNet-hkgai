@@ -1,7 +1,7 @@
 """
 Discovery Task Schemas
 
-Pydantic 模型用于多用户发现任务的请求和响应。
+Pydantic 模型用于多用户发现任务的请求和响应。 / EN: Pydantic model for requests and responses for multi-user discovery tasks.
 """
 
 import uuid
@@ -10,7 +10,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-# ============ 请求模型 ============
+# ============ 请求模型 ============ | EN: ============ Request model ============
 
 class CancelDiscoveryTaskRequest(BaseModel):
     """取消发现任务请求"""
@@ -19,14 +19,14 @@ class CancelDiscoveryTaskRequest(BaseModel):
 
 class ConfirmDiscoveryTaskRequest(BaseModel):
     """确认执行发现任务请求（可编辑计划）"""
-    # 用户可以编辑 pending_queries（删除不需要的、修改 topic）
+    # 用户可以编辑 pending_queries（删除不需要的、修改 topic） | EN: Users can edit pending_queries (delete unnecessary, modify topic)
     queries: Optional[list[dict]] = Field(
         None,
         description="编辑后的查询列表 [{target_owner, topic}]，为 None 表示全部接受",
     )
 
 
-# ============ 查询项模型 ============
+# ============ 查询项模型 ============ | EN: ============ Query item model ============
 
 class DiscoveryQueryItem(BaseModel):
     """发现任务中的单个查询项"""
@@ -51,7 +51,7 @@ class ActiveSessionItem(BaseModel):
     topic: str
 
 
-# ============ 响应模型 ============
+# ============ 响应模型 ============ | EN: ============ Response Model ============
 
 class DiscoveryTaskResponse(BaseModel):
     """发现任务响应"""
@@ -84,7 +84,7 @@ class DiscoveryTaskListResponse(BaseModel):
     total: int
 
 
-# ============ WebSocket 事件模型 ============
+# ============ WebSocket 事件模型 ============ | EN: ============ WebSocket Event Model ============
 
 class DiscoveryTaskCreatedEvent(BaseModel):
     """发现任务创建事件"""

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-天气查询工具
-查询指定城市的当前天气情况
+天气查询工具 / EN: Weather query tool
+查询指定城市的当前天气情况 / EN: Query the current weather conditions in a specified city
 """
 
 import sys
 import json
 from datetime import datetime
 
-# 检查requests库是否安装
+# 检查requests库是否安装 | EN: Check whether the requests library is installed
 try:
     import requests
 except ImportError:
@@ -20,7 +20,7 @@ except ImportError:
     print("如果需要全局安装，请添加 --user 参数")
     sys.exit(1)
 
-# 城市经纬度映射（中国主要城市）
+# 城市经纬度映射（中国主要城市） | EN: City longitude and latitude mapping (major cities in China)
 CITY_COORDINATES = {
     "北京": {"latitude": 39.9042, "longitude": 116.4074, "name": "北京"},
     "上海": {"latitude": 31.2304, "longitude": 121.4737, "name": "上海"},
@@ -48,7 +48,7 @@ CITY_COORDINATES = {
     "汕头": {"latitude": 23.3541, "longitude": 116.6820, "name": "汕头"},
 }
 
-# 天气代码转换表（根据Open-Meteo文档）
+# 天气代码转换表（根据Open-Meteo文档） | EN: Weather code conversion table (according to Open-Meteo documentation)
 WEATHER_CODES = {
     0: "晴朗",
     1: "基本晴朗",
@@ -80,7 +80,7 @@ WEATHER_CODES = {
     99: "重度雷暴加冰雹",
 }
 
-# 风向度数转换为方向描述
+# 风向度数转换为方向描述 | EN: Convert wind direction degrees to direction description
 def wind_direction_to_text(degrees):
     """将风向度数转换为中文方向描述"""
     directions = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"]
@@ -105,17 +105,17 @@ def geocode_city(city_name):
         data = response.json()
 
         if "results" not in data or len(data["results"]) == 0:
-            # 如果没有结果，尝试用英文查询（针对中文城市名）
+            # 如果没有结果，尝试用英文查询（针对中文城市名） | EN: If there is no result, try to query in English (for Chinese city names)
             if any('\u4e00' <= c <= '\u9fff' for c in city_name):  # 检查是否包含中文字符
                 print(f"中文查询无结果，尝试拼音/英文查询...")
-                # 这里可以添加拼音转换，但先简单重试
+                # 这里可以添加拼音转换，但先简单重试 | EN: Pinyin conversion can be added here, but simply try again first
                 pass
             print(f"未找到城市 '{city_name}' 的位置信息")
             return None
 
         results = data["results"]
 
-        # 知名国际城市映射（查询名 -> 预期国家代码）
+        # 知名国际城市映射（查询名 -> 预期国家代码） | EN: Well-known international city mapping (query name -> expected country code)
         MAJOR_CITIES = {
             "tokyo": "JP",      # 日本东京
             "new york": "US",   # 美国纽约
@@ -137,11 +137,11 @@ def geocode_city(city_name):
             "toronto": "CA",         # 加拿大多伦多
         }
 
-        # 对结果进行评分排序
+        # 对结果进行评分排序 | EN: Sort results by score
         def score_result(result, query):
             score = 0
 
-            # 名称匹配度（最重要）
+            # 名称匹配度（最重要） | EN: Name matching (most important)
             name = result.get("name", "").lower()
             query_lower = query.lower()
 
@@ -152,7 +152,7 @@ def geocode_city(city_name):
             elif name in query_lower:
                 score += 30   # 查询词包含名称
 
-            # 知名城市优先匹配
+            # 知名城市优先匹配 | EN: Well-known cities are prioritized for matching
             if query_lower in MAJOR_CITIES:
                 expected_country = MAJOR_CITIES[query_lower]
                 actual_country = result.get("country_code", "").upper()
@@ -161,7 +161,7 @@ def geocode_city(city_name):
                 elif actual_country != expected_country:
                     score -= 40  # 知名城市错误匹配（惩罚）
 
-            # 人口优先（如果存在）
+            # 人口优先（如果存在） | EN: Population priority (if present)
             population = result.get("population", 0)
             if population > 5000000:  # 500万人口以上（超大都市）
                 score += 60
@@ -174,12 +174,12 @@ def geocode_city(city_name):
             elif population > 0:
                 score += 5
 
-            # 中国城市优先（针对中文查询）
+            # 中国城市优先（针对中文查询） | EN: Chinese cities are prioritized (for Chinese queries)
             if any('\u4e00' <= c <= '\u9fff' for c in query):
                 if result.get("country_code", "").upper() == "CN":
                     score += 30
 
-            # 行政等级（如果存在）
+            # 行政等级（如果存在） | EN: Administrative level (if present)
             feature_code = result.get("feature_code", "")
             if feature_code == "PPLC":  # 首都
                 score += 50
@@ -192,23 +192,23 @@ def geocode_city(city_name):
 
             return score
 
-        # 计算每个结果的得分并排序
+        # 计算每个结果的得分并排序 | EN: Calculate the score of each result and sort it
         scored_results = []
         for result in results:
             score = score_result(result, city_name)
             scored_results.append((score, result))
 
-        # 按分数降序排序
+        # 按分数降序排序 | EN: Sort by score in descending order
         scored_results.sort(key=lambda x: x[0], reverse=True)
 
         if not scored_results:
             print(f"未找到合适的匹配结果")
             return None
 
-        # 选择最高分的结果
+        # 选择最高分的结果 | EN: Select the highest scoring result
         best_score, best_result = scored_results[0]
 
-        # 显示匹配信息（调试用）
+        # 显示匹配信息（调试用） | EN: Display matching information (for debugging)
         if len(scored_results) > 1:
             print(f"找到 {len(scored_results)} 个匹配，选择：{best_result['name']} (评分: {best_score})")
         else:
@@ -231,20 +231,20 @@ def geocode_city(city_name):
 
 def get_weather(city_name="北京"):
     """获取指定城市的天气信息"""
-    # 查找城市坐标（先检查预设字典）
+    # 查找城市坐标（先检查预设字典） | EN: Find city coordinates (check default dictionary first)
     city = CITY_COORDINATES.get(city_name)
     if not city:
-        # 尝试模糊匹配，比如用户输入"北京市"或"上海天气"
+        # 尝试模糊匹配，比如用户输入"北京市"或"上海天气" | EN: Try fuzzy matching, such as the user inputting "Beijing City" or "Shanghai Weather"
         for key in CITY_COORDINATES:
             if key in city_name or city_name in key:
                 city = CITY_COORDINATES[key]
                 break
 
-    # 如果预设字典中没有找到，尝试地理编码
+    # 如果预设字典中没有找到，尝试地理编码 | EN: If not found in the default dictionary, try geocoding
     if not city:
         geocode_result = geocode_city(city_name)
 
-        # 如果地理编码失败，尝试对中文城市名添加"市"后缀
+        # 如果地理编码失败，尝试对中文城市名添加"市"后缀 | EN: If geocoding fails, try adding the "city" suffix to the Chinese city name
         if not geocode_result and any('\u4e00' <= c <= '\u9fff' for c in city_name):
             if not city_name.endswith(('市', '县', '区')):
                 retry_name = city_name + '市'
@@ -260,7 +260,7 @@ def get_weather(city_name="北京"):
             print("4. 国际城市请使用英文名称（如'New York City'）")
             return None
 
-        # 使用地理编码结果
+        # 使用地理编码结果 | EN: Use geocoding results
         city = {
             "latitude": geocode_result["latitude"],
             "longitude": geocode_result["longitude"],
@@ -268,7 +268,7 @@ def get_weather(city_name="北京"):
         }
         print(f"找到位置：{geocode_result['name']}, {geocode_result.get('admin1', '')}, {geocode_result.get('country', '')}")
 
-    # 构建API请求URL
+    # 构建API请求URL | EN: Build API request URL
     url = f"https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": city["latitude"],
@@ -290,7 +290,7 @@ def get_weather(city_name="北京"):
 
         current = data["current_weather"]
 
-        # 解析数据
+        # 解析数据 | EN: Parse data
         temperature = current["temperature"]
         windspeed = current["windspeed"]
         winddirection = current["winddirection"]
@@ -298,20 +298,20 @@ def get_weather(city_name="北京"):
         is_day = current["is_day"]
         time_str = current["time"]
 
-        # 转换天气代码
+        # 转换天气代码 | EN: Convert weather code
         weather_desc = WEATHER_CODES.get(weathercode, "未知")
 
-        # 转换风向
+        # 转换风向 | EN: Change the direction of the wind
         wind_dir = wind_direction_to_text(winddirection)
 
-        # 解析时间
+        # 解析时间 | EN: parsing time
         try:
             update_time = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
             time_str = update_time.strftime("%Y年%m月%d日 %H:%M")
         except:
             pass
 
-        # 生成结果
+        # 生成结果 | EN: Generate results
         result = {
             "城市": city["name"],
             "温度": f"{temperature}°C",
@@ -353,44 +353,44 @@ def format_output(weather_data):
 
 def main():
     """主函数"""
-    # 优先从标准输入读取参数（更安全，防止shell注入）
+    # 优先从标准输入读取参数（更安全，防止shell注入） | EN: Prefer reading parameters from standard input (safer, prevent shell injection)
     import select
     city_input = None
 
-    # 检查标准输入是否有数据（非阻塞检查）
+    # 检查标准输入是否有数据（非阻塞检查） | EN: Check if there is data on standard input (non-blocking check)
     if select.select([sys.stdin], [], [], 0.0)[0]:
-        # 从标准输入读取
+        # 从标准输入读取 | EN: Read from standard input
         try:
             city_input = sys.stdin.read().strip()
         except Exception as e:
             print(f"读取标准输入错误：{e}")
 
-    # 如果没有从标准输入读取到数据，则使用命令行参数
+    # 如果没有从标准输入读取到数据，则使用命令行参数 | EN: If no data is read from standard input, use command line arguments
     if not city_input:
         if len(sys.argv) > 1:
-            # 合并所有参数作为城市名（支持带空格的名称）
+            # 合并所有参数作为城市名（支持带空格的名称） | EN: Combine all parameters as city name (supports names with spaces)
             city_input = " ".join(sys.argv[1:])
         else:
             city_input = "北京"
 
-    # 如果输入为空，使用默认
+    # 如果输入为空，使用默认 | EN: If the input is empty, use the default
     if not city_input:
         city_input = "北京"
 
-    # 移除可能的中文标点（无论输入来源）
+    # 移除可能的中文标点（无论输入来源） | EN: Remove possible Chinese punctuation (regardless of input source)
     city_input = city_input.replace("天气", "").replace("怎么样", "").replace("如何", "").strip()
 
     print(f"查询城市：{city_input}")
 
-    # 获取天气信息
+    # 获取天气信息 | EN: Get weather information
     weather_data = get_weather(city_input)
 
     if weather_data:
-        # 格式化输出
+        # 格式化输出 | EN: Formatted output
         output = format_output(weather_data)
         print(output)
 
-        # 返回给Claude的简洁版本
+        # 返回给Claude的简洁版本 | EN: Return to Claude's concise version
         print("\n📋 简洁摘要：")
         print(f"{weather_data['城市']}：{weather_data['温度']}，{weather_data['天气状况']}，{weather_data['风速']} {weather_data['风向']}")
     else:

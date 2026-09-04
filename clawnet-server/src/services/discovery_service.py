@@ -1,8 +1,8 @@
 """
 Discovery Service
 
-多用户发现任务的编排器。在 AgentDialogSession 之上管理多个 A2A 对话的生命周期，
-实现链式发现和多目标并行询问。
+多用户发现任务的编排器。在 AgentDialogSession 之上管理多个 A2A 对话的生命周期， / EN: Orchestrator for multi-user discovery tasks. Manage the life cycle of multiple A2A conversations on top of AgentDialogSession,
+实现链式发现和多目标并行询问。 / EN: Implement chain discovery and multi-target parallel query.
 """
 
 import asyncio
@@ -49,22 +49,22 @@ class DiscoveryOrchestrator:
         max_hops: int = 5,
         max_concurrent: int = 2,
     ) -> DiscoveryTask:
-        """创建发现任务
+        """创建发现任务 / EN: """Create a discovery task
 
         Args:
-            db: 数据库会话
-            source_conversation_id: 原始会话 ID
-            initiator_agent_id: 发起方 Agent ID
-            initiator_owner_id: 发起方用户 ID
-            original_intent: 原始用户意图描述
+            db: 数据库会话 / EN: db: database session
+            source_conversation_id: 原始会话 ID / EN: source_conversation_id: original conversation ID
+            initiator_agent_id: 发起方 Agent ID / EN: initiator_agent_id: initiator Agent ID
+            initiator_owner_id: 发起方用户 ID / EN: initiator_owner_id: initiator user ID
+            original_intent: 原始用户意图描述 / EN: original_intent: Original user intent description
             queries: 待询问列表 [{target_owner, topic}]
-            max_hops: 最大联系人数
-            max_concurrent: 最大并发 A2A 数
+            max_hops: 最大联系人数 / EN: max_hops: maximum number of contacts
+            max_concurrent: 最大并发 A2A 数 / EN: max_concurrent: Maximum number of concurrent A2A
 
         Returns:
-            DiscoveryTask 对象
+            DiscoveryTask 对象 / EN: DiscoveryTask object
         """
-        # 去重查询
+        # 去重查询 | EN: Deduplication query
         seen = set()
         deduped_queries = []
         for q in queries:
@@ -94,15 +94,15 @@ class DiscoveryOrchestrator:
             f"max_hops={task.max_hops}"
         )
 
-        # 通过 WS 通知用户发现任务已创建
+        # 通过 WS 通知用户发现任务已创建 | EN: Notify user via WS that discovery task has been created
         await self._notify_created(task)
 
         return task
 
     async def start_task(self, task_id: str) -> None:
-        """启动发现任务（开始处理队列）
+        """启动发现任务（开始处理队列） / EN: """Start the discovery task (start processing the queue)
 
-        在后台异步执行，不阻塞当前请求。
+        在后台异步执行，不阻塞当前请求。 / EN: Execute asynchronously in the background without blocking the current request.
         """
         asyncio.create_task(self._process_queue_safe(task_id))
 
@@ -123,14 +123,14 @@ class DiscoveryOrchestrator:
             raise ValueError(f"Task status is {task.status}, cannot confirm")
 
         if edited_queries is not None:
-            # 用户编辑了查询计划
+            # 用户编辑了查询计划 | EN: User edited query plan
             task.pending_queries = edited_queries
 
         task.status = DiscoveryTaskStatus.RUNNING.value
         task.version += 1
         await db.flush()
 
-        # 启动处理
+        # 启动处理 | EN: Start processing
         await self.start_task(str(task.id))
         return task
 
@@ -153,7 +153,7 @@ class DiscoveryOrchestrator:
         log_prefix = f"[Discovery:{str(task_id)[:8]}]"
         source_conv_id = task.source_conversation_id
 
-        # 终止所有活跃的 A2A 会话
+        # 终止所有活跃的 A2A 会话 | EN: Terminate all active A2A sessions
         for active in (task.active_sessions or []):
             session_id = active.get("session_id")
             if session_id:
@@ -166,7 +166,7 @@ class DiscoveryOrchestrator:
 
         await self._notify_completed(task)
 
-        # 如果是嵌套任务，恢复父对话并注入取消通知
+        # 如果是嵌套任务，恢复父对话并注入取消通知 | EN: If it is a nested task, restore the parent conversation and inject a cancellation notification
         parent_session = await self._find_parent_dialog_session(
             db, source_conv_id, str(task_id)
         )
@@ -213,12 +213,12 @@ class DiscoveryOrchestrator:
         if status:
             query = query.where(DiscoveryTask.status == status)
 
-        # 总数
+        # 总数 | EN: total
         from sqlalchemy import func
         count_query = select(func.count()).select_from(query.subquery())
         total = (await db.execute(count_query)).scalar() or 0
 
-        # 分页
+        # 分页 | EN: Pagination
         query = query.order_by(DiscoveryTask.created_at.desc()).offset(offset).limit(limit)
         result = await db.execute(query)
         tasks = list(result.scalars().all())
@@ -248,14 +248,14 @@ class DiscoveryOrchestrator:
         session: AgentDialogSession,
         db: AsyncSession,
     ) -> bool:
-        """A2A 对话完成回调
+        """A2A 对话完成回调 / EN: """A2A dialogue completion callback
 
-        当一个 A2A 对话完成时由 agent_dialog_service 调用。
-        如果该对话属于某个发现任务，更新任务状态并继续处理队列。
+        当一个 A2A 对话完成时由 agent_dialog_service 调用。 / EN: Called by agent_dialog_service when an A2A conversation is complete.
+        如果该对话属于某个发现任务，更新任务状态并继续处理队列。 / EN: If the conversation belongs to a discovery task, update the task status and continue processing the queue.
 
         Returns:
-            True 如果该对话属于发现任务（不需要直接回传结果），
-            False 表示非发现任务对话（保持原有行为）。
+            True 如果该对话属于发现任务（不需要直接回传结果）， / EN: True if the conversation is a discovery task (results do not need to be returned directly),
+            False 表示非发现任务对话（保持原有行为）。 / EN: False means non-discovery task dialogue (keep original behavior).
         """
         metadata = session.metadata_ or {}
         discovery_task_id = metadata.get("discovery_task_id")
@@ -271,22 +271,22 @@ class DiscoveryOrchestrator:
         session_id_str = str(session.id)
         log_prefix = f"[Discovery:{str(task.id)[:8]}]"
 
-        # 从 active_sessions 移除
+        # 从 active_sessions 移除 | EN: Remove from active_sessions
         active = list(task.active_sessions or [])
         task.active_sessions = [a for a in active if a.get("session_id") != session_id_str]
 
-        # 构建摘要
+        # 构建摘要 | EN: Build summary
         from src.services.agent_dialog_service import agent_dialog_orchestrator
         summary = await agent_dialog_orchestrator._build_dialog_summary(session, db)
 
-        # 获取对方 owner 名称
+        # 获取对方 owner 名称 | EN: Get the other party’s owner name
         from src.services.prompt_templates import get_unknown_user, get_user_lang
         responder_owner = await db.get(User, session.responder_owner_id)
         initiator_owner = await db.get(User, task.initiator_owner_id)
         lang = get_user_lang(initiator_owner)
         responder_name = responder_owner.display_name if responder_owner else get_unknown_user(lang)
 
-        # 添加到 completed_results
+        # 添加到 completed_results | EN: Add to completed_results
         completed = list(task.completed_results or [])
         completed.append({
             "target_owner": responder_name,
@@ -305,21 +305,21 @@ class DiscoveryOrchestrator:
             f"results={len(completed)}/{task.current_hop_count}"
         )
 
-        # 将单次结果回传给 Agent（让 Agent 基于已知信息做后续决策）
-        # 但如果是嵌套对话子任务，跳过回传——父对话已暂停，
-        # 结果将在 _finalize_task → _resume_parent_dialog 中统一注入
+        # 将单次结果回传给 Agent（让 Agent 基于已知信息做后续决策） | EN: Send a single result back to the Agent (let the Agent make subsequent decisions based on known information)
+        # 但如果是嵌套对话子任务，跳过回传——父对话已暂停， | EN: But if it is a nested dialogue subtask, the postback is skipped - the parent dialogue has been paused.
+        # 结果将在 _finalize_task → _resume_parent_dialog 中统一注入 | EN: The results will be uniformly injected in _finalize_task → _resume_parent_dialog
         parent = await self._find_parent_dialog_session(
             db, task.source_conversation_id, str(task.id)
         )
         if not parent:
             await self._feedback_single_result(task, session, summary, responder_name, db)
 
-        # 通知前端进度更新
+        # 通知前端进度更新 | EN: Notify front-end of progress updates
         await self._notify_progress(task)
 
-        # 如果还有待处理的查询或者 Agent 可能发现新目标，继续处理
-        # 等待 Agent 回复后可能产生新的 intents（由 _check_dialog_intent 追加）
-        # 使用延迟调度，给 Agent 回复时间
+        # 如果还有待处理的查询或者 Agent 可能发现新目标，继续处理 | EN: If there are still pending queries or the Agent may discover new targets, continue processing
+        # 等待 Agent 回复后可能产生新的 intents（由 _check_dialog_intent 追加） | EN: New intents may be generated after waiting for the Agent's reply (appended by _check_dialog_intent)
+        # 使用延迟调度，给 Agent 回复时间 | EN: Use delayed scheduling to give the Agent time to reply
         asyncio.create_task(self._delayed_check_completion(str(task.id), delay=10.0))
 
         return True
@@ -338,7 +338,7 @@ class DiscoveryOrchestrator:
         ):
             return
 
-        # 去重：不重复联系已经问过的人
+        # 去重：不重复联系已经问过的人 | EN: Eliminate duplicates: Do not contact people you have already asked again.
         existing_targets = set()
         for r in (task.completed_results or []):
             existing_targets.add(r.get("target_owner", ""))
@@ -364,7 +364,7 @@ class DiscoveryOrchestrator:
         pending = list(task.pending_queries or [])
         pending.extend(added)
         task.pending_queries = pending
-        # 如果任务在 completing 状态，回到 running
+        # 如果任务在 completing 状态，回到 running | EN: If the task is in the completing state, return to running
         if task.status == DiscoveryTaskStatus.COMPLETING.value:
             task.status = DiscoveryTaskStatus.RUNNING.value
         task.version += 1
@@ -374,10 +374,10 @@ class DiscoveryOrchestrator:
             f"[Discovery:{str(task.id)[:8]}] Added {len(added)} new queries via chain discovery"
         )
 
-        # 继续处理队列
+        # 继续处理队列 | EN: Continue processing the queue
         await self.start_task(str(task.id))
 
-    # ============ 内部方法 ============
+    # ============ 内部方法 ============ | EN: ============ Internal methods ============
 
     async def _process_queue_safe(self, task_id: str) -> None:
         """安全处理队列（带锁防止并发）"""
@@ -404,7 +404,7 @@ class DiscoveryOrchestrator:
             lang = get_user_lang(initiator_owner)
 
             while task.has_pending_queries() and task.can_add_hop():
-                # 检查并发限制
+                # 检查并发限制 | EN: Check concurrency limits
                 active_count = len(task.active_sessions or [])
                 if active_count >= task.max_concurrent:
                     logger.info(
@@ -413,7 +413,7 @@ class DiscoveryOrchestrator:
                     )
                     break
 
-                # 取出一个查询
+                # 取出一个查询 | EN: Get a query
                 pending = list(task.pending_queries)
                 query = pending.pop(0)
                 task.pending_queries = pending
@@ -425,13 +425,13 @@ class DiscoveryOrchestrator:
                 if not target_owner or not topic:
                     continue
 
-                # 创建 A2A 对话
+                # 创建 A2A 对话 | EN: Create an A2A conversation
                 success = await self._create_a2a_session(
                     db, task, target_owner, topic, nesting_depth=nesting_depth
                 )
 
                 if not success:
-                    # 记录失败
+                    # 记录失败 | EN: Logging failed
                     completed = list(task.completed_results or [])
                     completed.append({
                         "target_owner": target_owner,
@@ -446,10 +446,10 @@ class DiscoveryOrchestrator:
                 await db.commit()
                 await db.refresh(task)
 
-                # 通知进度
+                # 通知进度 | EN: Notify progress
                 await self._notify_progress(task)
 
-            # 检查是否全部完成
+            # 检查是否全部完成 | EN: Check if everything is done
             if task.is_all_done() and task.status == DiscoveryTaskStatus.RUNNING.value:
                 await self._finalize_task(task, db)
 
@@ -465,14 +465,14 @@ class DiscoveryOrchestrator:
         log_prefix = f"[Discovery:{str(task.id)[:8]}]"
 
         try:
-            # 查找目标用户
+            # 查找目标用户 | EN: Find target users
             result = await db.execute(
                 select(User).where(User.display_name == target_owner)
             )
             target_user = result.scalar_one_or_none()
 
             if not target_user:
-                # 模糊匹配
+                # 模糊匹配 | EN: fuzzy matching
                 result = await db.execute(
                     select(User).where(User.display_name.ilike(f'%{target_owner}%'))
                 )
@@ -482,12 +482,12 @@ class DiscoveryOrchestrator:
                 logger.warning(f"{log_prefix} User not found: {target_owner}")
                 return False
 
-            # 排除自己：不能联系发起者自己
+            # 排除自己：不能联系发起者自己 | EN: Exclude self: Cannot contact the initiator himself
             if target_user.id == task.initiator_owner_id:
                 logger.info(f"{log_prefix} Skipping self-contact: {target_owner}")
                 return False
 
-            # 查找在线 Agent
+            # 查找在线 Agent | EN: Find an online agent
             result = await db.execute(
                 select(Agent).where(
                     Agent.owner_id == target_user.id,
@@ -500,7 +500,7 @@ class DiscoveryOrchestrator:
                 logger.warning(f"{log_prefix} No online agent for: {target_owner}")
                 return False
 
-            # 创建 A2A 对话
+            # 创建 A2A 对话 | EN: Create an A2A conversation
             from src.services.agent_dialog_service import agent_dialog_orchestrator
 
             req = CreateDialogSessionRequest(
@@ -521,7 +521,7 @@ class DiscoveryOrchestrator:
                 db, req, task.initiator_owner_id
             )
 
-            # 更新 active_sessions 和 hop_count
+            # 更新 active_sessions 和 hop_count | EN: Update active_sessions and hop_count
             active = list(task.active_sessions or [])
             active.append({
                 "session_id": str(session.id),
@@ -560,11 +560,11 @@ class DiscoveryOrchestrator:
             if not initiator_agent:
                 return
 
-            # 获取发起方语言偏好
+            # 获取发起方语言偏好 | EN: Get the initiator's language preference
             initiator_owner = await db.get(User, task.initiator_owner_id)
             lang = get_user_lang(initiator_owner)
 
-            # 获取原始会话参与者
+            # 获取原始会话参与者 | EN: Get original session participants
             result = await db.execute(
                 select(ConversationParticipant.participant_id).where(
                     ConversationParticipant.conversation_id == task.source_conversation_id
@@ -572,7 +572,7 @@ class DiscoveryOrchestrator:
             )
             participant_ids = [str(row[0]) for row in result.all()]
 
-            # 构造带发现上下文的结果 prompt
+            # 构造带发现上下文的结果 prompt | EN: Construct the result prompt with discovery context
             discovery_context = {
                 "contacted_count": task.current_hop_count,
                 "max_hops": task.max_hops,
@@ -632,14 +632,14 @@ class DiscoveryOrchestrator:
             if task.is_all_done():
                 await self._finalize_task(task, db)
             elif task.has_pending_queries():
-                # 还有待处理的查询，继续处理
+                # 还有待处理的查询，继续处理 | EN: There are still pending queries, continue processing
                 await self.start_task(task_id)
 
     async def _finalize_task(self, task: DiscoveryTask, db: AsyncSession) -> None:
-        """最终汇总阶段：所有子对话完成后生成汇总
+        """最终汇总阶段：所有子对话完成后生成汇总 / EN: """Final summary stage: a summary is generated after all sub-dialogues are completed
 
-        如果 DiscoveryTask 是由嵌套对话触发的（source_conversation 有 PAUSED
-        + NESTED_DIALOG 的 AgentDialogSession），则恢复父对话而非直接注入会话。
+        如果 DiscoveryTask 是由嵌套对话触发的（source_conversation 有 PAUSED / EN: If the DiscoveryTask is triggered by a nested conversation (source_conversation has PAUSED
+        + NESTED_DIALOG 的 AgentDialogSession），则恢复父对话而非直接注入会话。 / EN: + AgentDialogSession of NESTED_DIALOG), the parent dialog is restored instead of injecting the session directly.
         """
         log_prefix = f"[Discovery:{str(task.id)[:8]}]"
 
@@ -651,7 +651,7 @@ class DiscoveryOrchestrator:
         logger.info(f"{log_prefix} Entering finalization phase")
 
         try:
-            # 检查是否是嵌套对话产生的子任务
+            # 检查是否是嵌套对话产生的子任务 | EN: Check if it is a subtask generated by a nested conversation
             parent_session = await self._find_parent_dialog_session(
                 db, task.source_conversation_id, str(task.id)
             )
@@ -661,7 +661,7 @@ class DiscoveryOrchestrator:
             else:
                 await self._finalize_to_source_conversation(task, db)
 
-            # 标记完成
+            # 标记完成 | EN: Mark complete
             task.status = DiscoveryTaskStatus.COMPLETED.value
             task.completed_at = datetime.now(timezone.utc)
             task.version += 1
@@ -757,10 +757,10 @@ class DiscoveryOrchestrator:
         cancelled: bool = False,
         cancel_reason: Optional[str] = None,
     ) -> None:
-        """恢复因嵌套对话而暂停的父 A2A 对话
+        """恢复因嵌套对话而暂停的父 A2A 对话 / EN: """Resume a parent A2A conversation paused by a nested conversation
 
         Args:
-            cancelled: True 表示子任务被取消（而非正常完成）
+            cancelled: True 表示子任务被取消（而非正常完成） / EN: canceled: True indicates that the subtask was canceled (rather than completed normally)
             cancel_reason: 取消原因（cancelled=True 时使用）
         """
         from src.models.agent_dialog_session import TerminationReason
@@ -769,7 +769,7 @@ class DiscoveryOrchestrator:
         session_id_str = str(parent_session.id)
         log_prefix = f"[Discovery:{str(task.id)[:8]}]"
 
-        # 乐观锁：PAUSED → ACTIVE
+        # 乐观锁：PAUSED → ACTIVE | EN: Optimistic lock: PAUSED → ACTIVE
         result = await db.execute(
             update(AgentDialogSession)
             .where(
@@ -793,7 +793,7 @@ class DiscoveryOrchestrator:
         await db.commit()
         await db.refresh(parent_session)
 
-        # 确定哪个 Agent 发起了嵌套对话（从 metadata 恢复）
+        # 确定哪个 Agent 发起了嵌套对话（从 metadata 恢复） | EN: Determine which Agent initiated the nested conversation (recovered from metadata)
         metadata = parent_session.metadata_ or {}
         nested_agent_id_str = metadata.get("nested_initiator_agent_id")
 
@@ -806,7 +806,7 @@ class DiscoveryOrchestrator:
             logger.error(f"{log_prefix} Cannot find agent to resume dialog")
             return
 
-        # 根据场景构造不同的 prompt
+        # 根据场景构造不同的 prompt | EN: Construct different prompts according to scenarios
         from src.services.prompt_templates import build_resume_prompt_i18n, get_user_lang
         initiator_owner = await db.get(User, task.initiator_owner_id)
         lang = get_user_lang(initiator_owner)
@@ -817,7 +817,7 @@ class DiscoveryOrchestrator:
             lang=lang,
         )
 
-        # 发送给 Agent 继续对话
+        # 发送给 Agent 继续对话 | EN: Send to Agent to continue conversation
         await agent_dialog_orchestrator._send_to_agent(
             session=parent_session,
             agent=responder_agent,
@@ -825,7 +825,7 @@ class DiscoveryOrchestrator:
             db=db,
         )
 
-        # 发送结构化对话状态消息通知 Owner
+        # 发送结构化对话状态消息通知 Owner | EN: Send structured conversation status message to notify Owner
         if cancelled:
             resume_reason = "nested_cancelled"
             resume_params = {"cancel_reason": cancel_reason or "user_cancelled"}
@@ -843,7 +843,7 @@ class DiscoveryOrchestrator:
         )
         await db.commit()
 
-        # WebSocket 通知状态变更
+        # WebSocket 通知状态变更 | EN: WebSocket notification status changes
         try:
             owner_ids = [
                 str(parent_session.initiator_owner_id),
@@ -964,5 +964,5 @@ class DiscoveryOrchestrator:
         self._processing_locks.pop(task_id, None)
 
 
-# 单例
+# 单例 | EN: Singleton
 discovery_orchestrator = DiscoveryOrchestrator()

@@ -172,7 +172,7 @@ test('two-window A2A end-to-end: alice initiates, bob rejects, alice sees feedba
 
   // ── Step 2: server delivers intent_authorization to ALICE ──
   // Mirrors what the real server does after alice's main agent emits
-  // a contact intent in response to "联系下 Bob".
+  // a contact intent in response to "联系下 Bob". | EN: a contact intent in response to "Contact Bob".
   const SESSION_ID = 'sess-two-window-1';
   await pushToToken(TOKEN_ALICE, {
     type: 'dialog.intent_authorization',

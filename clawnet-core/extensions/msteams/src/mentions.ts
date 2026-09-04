@@ -29,7 +29,7 @@ export type MentionInfo = {
  * - AAD object IDs (UUIDs): "d5318c29-33ac-4e6b-bd42-57b8b793908f"
  *
  * Keep this permissive enough for real Teams IDs while still rejecting
- * documentation placeholders like `@[表示名](ユーザーID)`.
+ * documentation placeholders like `@[表示名](ユーザーID)`. | EN: documentation placeholders like `@[display name](ユーザーID)`.
  */
 const TEAMS_BOT_ID_PATTERN = /^\d+:[a-z0-9._=-]+(?::[a-z0-9._=-]+)*$/i;
 const AAD_OBJECT_ID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -44,7 +44,7 @@ function isValidTeamsId(id: string): boolean {
  *
  * Only matches where the id looks like a real Teams user/bot ID are treated
  * as mentions. This avoids false positives from documentation or code samples
- * embedded in the message (e.g. `@[表示名](ユーザーID)` in backticks).
+ * embedded in the message (e.g. `@[表示名](ユーザーID)` in backticks). | EN: embedded in the message (e.g. `@[presentation name](ユーザーID)` in backticks).
  *
  * Returns both the formatted text with <at> tags and the entities array.
  */

@@ -13,12 +13,12 @@ class TestDiscoveryTaskStatus:
     """DiscoveryTask 状态枚举测试（不依赖 SQLAlchemy）"""
 
     def test_status_values(self):
-        # 直接测试字符串值，不触发 database import
+        # 直接测试字符串值，不触发 database import | EN: Test the string value directly without triggering database import
         expected_statuses = {
             "pending", "running", "completing",
             "completed", "cancelled", "failed",
         }
-        # 这些值会在 migration SQL 和模型中使用
+        # 这些值会在 migration SQL 和模型中使用 | EN: These values ​​will be used in migration SQL and models
         for s in expected_statuses:
             assert isinstance(s, str)
             assert len(s) <= 20  # 数据库字段限制
@@ -125,10 +125,10 @@ class TestFinalSummaryPrompt:
 你先后联系了 {total} 个人来完成用户的请求。
 用户的原始意图：{task.original_intent}
 
-各方回复结果：
+各方回复结果： / EN: Response results from all parties:
 {chr(10).join(result_lines)}
 
-请将以上所有结果综合汇总，给你的用户一个完整的回复。
+请将以上所有结果综合汇总，给你的用户一个完整的回复。 / EN: Please summarize all the above results and give your users a complete reply.
 [/DISCOVERY_COMPLETE]"""
 
     def test_build_final_summary(self):

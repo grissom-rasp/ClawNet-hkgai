@@ -1,12 +1,12 @@
 """
-内部 API —— 供外挂程序以 Agent 身份发消息。
+内部 API —— 供外挂程序以 Agent 身份发消息。 / EN: Internal API - for plug-ins to send messages as Agents.
 
-认证方式: X-API-Key header（不需要用户密码）。
-消息走完整链路：写入数据库 → WebSocket 通知前端 → 用户能看到。
+认证方式: X-API-Key header（不需要用户密码）。 / EN: Authentication method: X-API-Key header (no user password required).
+消息走完整链路：写入数据库 → WebSocket 通知前端 → 用户能看到。 / EN: The message goes through the complete link: written to the database → WebSocket notifies the front end → the user can see it.
 
-支持两种模式：
-1. 普通发送：一次性发送完整消息
-2. 流式发送：分批发送消息片段，前端实时显示
+支持两种模式： / EN: Two modes are supported:
+1. 普通发送：一次性发送完整消息 / EN: 1. Normal sending: sending the complete message at once
+2. 流式发送：分批发送消息片段，前端实时显示 / EN: 2. Streaming sending: sending message fragments in batches and displaying them in real time on the front end
 """
 import asyncio
 import uuid
@@ -51,20 +51,20 @@ async def agent_send_message(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(verify_api_key),
 ):
-    """以 Agent 身份向指定会话发送消息。
+    """以 Agent 身份向指定会话发送消息。 / EN: """Sends a message to the specified session as Agent.
 
-    消息会写入数据库，并通过 WebSocket 通知前端用户。
+    消息会写入数据库，并通过 WebSocket 通知前端用户。 / EN: The message is written to the database and the front-end user is notified via WebSocket.
 
     Headers:
-        X-API-Key: 内部 API Key
+        X-API-Key: 内部 API Key / EN: X-API-Key: Internal API Key
 
     Body:
         agent_id: Agent ID
-        conversation_id: 会话 ID
-        content: 消息内容
+        conversation_id: 会话 ID / EN: conversation_id: conversation ID
+        content: 消息内容 / EN: content: message content
         content_type: 消息类型 (默认 text)
     """
-    # 1. 验证 Agent 存在
+    # 1. 验证 Agent 存在 | EN: 1. Verify that Agent exists
     agent_result = await db.execute(
         select(Agent).where(Agent.id == req.agent_id)
     )
@@ -72,7 +72,7 @@ async def agent_send_message(
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent not found: {req.agent_id}")
 
-    # 2. 验证 Agent 是该会话的参与者
+    # 2. 验证 Agent 是该会话的参与者 | EN: 2. Verify that the Agent is a participant in the session
     part_result = await db.execute(
         select(ConversationParticipant).where(
             ConversationParticipant.conversation_id == req.conversation_id,
@@ -86,7 +86,7 @@ async def agent_send_message(
             detail=f"Agent {req.agent_id} is not a participant of conversation {req.conversation_id}",
         )
 
-    # 3. 构造消息请求并保存
+    # 3. 构造消息请求并保存 | EN: 3. Construct a message request and save it
     msg_req = SendMessageRequest(
         content_type=req.content_type,
         content={"text": req.content} if req.content_type == "text" else {"text": req.content},
@@ -99,7 +99,7 @@ async def agent_send_message(
         req=msg_req,
     )
 
-    # 4. 通过 WebSocket 通知所有人类参与者
+    # 4. 通过 WebSocket 通知所有人类参与者 | EN: 4. Notify all human participants via WebSocket
     participants_result = await db.execute(
         select(ConversationParticipant).where(
             ConversationParticipant.conversation_id == req.conversation_id,
@@ -137,7 +137,7 @@ async def agent_send_message(
     }
 
 
-# ============ 流式发送 API ============
+# ============ 流式发送 API ============ | EN: ============ Streaming API ============
 
 class AgentStreamStartRequest(BaseModel):
     """开始流式发送请求体。"""
@@ -157,7 +157,7 @@ class AgentStreamEndRequest(BaseModel):
     save_to_db: bool = True  # 是否保存到数据库
 
 
-# 存储活跃的流式会话
+# 存储活跃的流式会话 | EN: Store active streaming sessions
 _active_streams: dict[str, dict] = {}
 
 
@@ -167,23 +167,23 @@ async def agent_stream_start(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(verify_api_key),
 ):
-    """开始流式发送消息。
+    """开始流式发送消息。 / EN: """Start streaming messages.
     
-    返回 stream_id，后续通过 stream_id 发送增量和结束流式。
+    返回 stream_id，后续通过 stream_id 发送增量和结束流式。 / EN: Return stream_id, then send increment and end streaming through stream_id.
     
     Headers:
-        X-API-Key: 内部 API Key
+        X-API-Key: 内部 API Key / EN: X-API-Key: Internal API Key
     
     Body:
         agent_id: Agent ID
-        conversation_id: 会话 ID
+        conversation_id: 会话 ID / EN: conversation_id: conversation ID
     """
-    # 验证 Agent
+    # 验证 Agent | EN: Verify Agent
     agent = await db.get(Agent, req.agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent not found: {req.agent_id}")
     
-    # 验证参与者
+    # 验证参与者 | EN: Verify participants
     part_result = await db.execute(
         select(ConversationParticipant).where(
             ConversationParticipant.conversation_id == req.conversation_id,
@@ -197,10 +197,10 @@ async def agent_stream_start(
             detail=f"Agent {req.agent_id} is not a participant of conversation {req.conversation_id}",
         )
     
-    # 获取 owner 信息
+    # 获取 owner 信息 | EN: Get owner information
     owner = await db.get(User, agent.owner_id)
     
-    # 获取人类参与者
+    # 获取人类参与者 | EN: Get human participants
     participants_result = await db.execute(
         select(ConversationParticipant).where(
             ConversationParticipant.conversation_id == req.conversation_id,
@@ -211,10 +211,10 @@ async def agent_stream_start(
         str(p.participant_id) for p in participants_result.scalars().all()
     ]
     
-    # 生成 stream_id
+    # 生成 stream_id | EN: Generate stream_id
     stream_id = f"stream-{uuid.uuid4()}"
     
-    # 存储流式会话信息
+    # 存储流式会话信息 | EN: Store streaming session information
     _active_streams[stream_id] = {
         "agent_id": str(req.agent_id),
         "conversation_id": str(req.conversation_id),
@@ -226,7 +226,7 @@ async def agent_stream_start(
         "started_at": datetime.now(timezone.utc),
     }
     
-    # 发送 stream_start 事件
+    # 发送 stream_start 事件 | EN: Send stream_start event
     sender = {
         "id": str(agent.id),
         "name": agent.display_name,
@@ -256,23 +256,23 @@ async def agent_stream_delta(
     req: AgentStreamDeltaRequest,
     _: str = Depends(verify_api_key),
 ):
-    """发送流式增量文本。
+    """发送流式增量文本。 / EN: """Send streaming incremental text.
     
     Headers:
-        X-API-Key: 内部 API Key
+        X-API-Key: 内部 API Key / EN: X-API-Key: Internal API Key
     
     Body:
-        stream_id: 流式会话 ID
-        delta: 增量文本
+        stream_id: 流式会话 ID / EN: stream_id: streaming session ID
+        delta: 增量文本 / EN: delta: delta text
     """
     stream = _active_streams.get(req.stream_id)
     if not stream:
         raise HTTPException(status_code=404, detail=f"Stream not found: {req.stream_id}")
     
-    # 累加到 buffer
+    # 累加到 buffer | EN: Accumulate to buffer
     stream["buffer"] += req.delta
     
-    # 广播增量
+    # 广播增量 | EN: broadcast increment
     await ws_manager.send_message_stream_delta(
         participant_ids=stream["participant_ids"],
         message_id=req.stream_id,
@@ -293,16 +293,16 @@ async def agent_stream_end(
     req: AgentStreamEndRequest,
     _: str = Depends(verify_api_key),
 ):
-    """结束流式发送。
+    """结束流式发送。 / EN: """End streaming.
     
-    可选择是否将完整消息保存到数据库。
+    可选择是否将完整消息保存到数据库。 / EN: Optionally save the complete message to the database.
     
     Headers:
-        X-API-Key: 内部 API Key
+        X-API-Key: 内部 API Key / EN: X-API-Key: Internal API Key
     
     Body:
-        stream_id: 流式会话 ID
-        save_to_db: 是否保存到数据库（默认 True）
+        stream_id: 流式会话 ID / EN: stream_id: streaming session ID
+        save_to_db: 是否保存到数据库（默认 True） / EN: save_to_db: whether to save to the database (default True)
     """
     stream = _active_streams.pop(req.stream_id, None)
     if not stream:
@@ -311,7 +311,7 @@ async def agent_stream_end(
     final_text = stream["buffer"].strip()
     message_id = None
     
-    # 发送 stream_end 事件
+    # 发送 stream_end 事件 | EN: Send stream_end event
     await ws_manager.send_message_stream_end(
         participant_ids=stream["participant_ids"],
         message_id=req.stream_id,
@@ -319,7 +319,7 @@ async def agent_stream_end(
         final_text=final_text,
     )
     
-    # 保存到数据库
+    # 保存到数据库 | EN: Save to database
     if req.save_to_db and final_text:
         async with async_session() as db:
             msg_req = SendMessageRequest(
@@ -337,7 +337,7 @@ async def agent_stream_end(
             await db.commit()
             message_id = str(msg.id)
             
-            # 发送 message.new 事件（关联流式消息）
+            # 发送 message.new 事件（关联流式消息） | EN: Send message.new event (associated with streaming messages)
             await ws_manager.broadcast_message(
                 stream["participant_ids"],
                 {

@@ -2,14 +2,14 @@
 set -euo pipefail
 
 # =============================================================================
-# 使用单一镜像启动多个 Clawnet Gateway 容器
-# 用法: ./multi-run.sh setup
+# 使用单一镜像启动多个 Clawnet Gateway 容器 | EN: Start multiple Clawnet Gateway containers using a single image
+# 用法: ./multi-run.sh setup | EN: Usage: ./multi-run.sh setup
 #
-# 所有容器共享同一个 clawnet-v1 镜像，通过不同的后缀区分。
+# 所有容器共享同一个 clawnet-v1 镜像，通过不同的后缀区分。 | EN: All containers share the same clawnet-v1 image and are distinguished by different suffixes.
 # =============================================================================
 
-# ---- 配置 ----
-# 镜像名须与后端 provision 服务的 OPENCLAW_IMAGE_PATTERN 一致 (默认 openclaw-{env}:local)
+# ---- 配置 ---- | EN: ---- Configuration ----
+# 镜像名须与后端 provision 服务的 OPENCLAW_IMAGE_PATTERN 一致 (默认 openclaw-{env}:local) | EN: The image name must be consistent with the OPENCLAW_IMAGE_PATTERN of the backend provision service (default openclaw-{env}:local)
 ENV="${CLAWNET_ENV:-v1}"
 IMAGE_NAME="openclaw-${ENV}:local"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,14 +28,14 @@ show_help() {
 EOF
 }
 
-# 构建 Docker 镜像
+# 构建 Docker 镜像 | EN: Build a Docker image
 build_image() {
   local no_cache="${1:-false}"
   local fix_uid fix_gid
   fix_uid="$(id -u)"
   fix_gid="$(id -g)"
 
-  # 确定 Dockerfile 位置
+  # 确定 Dockerfile 位置 | EN: Determine Dockerfile location
   local dockerfile=""
   if [[ -f "$BASE_DIR/Dockerfile" ]]; then
     dockerfile="$BASE_DIR/Dockerfile"
@@ -47,7 +47,7 @@ build_image() {
     return 1
   fi
 
-  # 确定源码目录
+  # 确定源码目录 | EN: Determine the source code directory
   if [[ ! -d "$SOURCE_DIR" ]]; then
     echo "错误: 源码目录不存在: $SOURCE_DIR" >&2
     return 1
@@ -76,7 +76,7 @@ build_image() {
   echo "==> 镜像构建完成: $IMAGE_NAME"
 }
 
-# ---- 主逻辑 ----
+# ---- 主逻辑 ---- | EN: ---- Main logic ----
 
 COMMAND="${1:-}"
 shift || true

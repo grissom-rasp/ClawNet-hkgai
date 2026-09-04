@@ -1,10 +1,10 @@
 """
-事件投递服务
+事件投递服务 / EN: event delivery service
 
-职责：
-1. 将事件持久化到 user_events 表（与业务数据同事务）
-2. 业务 commit 后，安全地通过 WebSocket 推送事件（失败不阻塞业务）
-3. 用户上线时推送所有未消费事件
+职责： / EN: Responsibilities:
+1. 将事件持久化到 user_events 表（与业务数据同事务） / EN: 1. Persist events to the user_events table (same transaction as business data)
+2. 业务 commit 后，安全地通过 WebSocket 推送事件（失败不阻塞业务） / EN: 2. After the business commits, safely push events through WebSocket (failure will not block the business)
+3. 用户上线时推送所有未消费事件 / EN: 3. Push all unconsumed events when users go online
 """
 
 import logging
@@ -20,9 +20,9 @@ logger = logging.getLogger("clawnet.events")
 
 
 class EventCollector:
-    """在一次业务操作中收集待发送事件。
+    """在一次业务操作中收集待发送事件。 / EN: """Collect events to be sent in a business operation.
 
-    用法：
+    用法： / EN: usage:
         events = EventCollector()
         events.add(db, user_id, "dialog.completed", {...})
         events.add(db, user_id2, "dialog.completed", {...})
@@ -64,7 +64,7 @@ class EventCollector:
                     "type": event_type,
                     "data": payload,
                 })
-                # 投递成功，标记已消费
+                # 投递成功，标记已消费 | EN: Delivery successful, marked consumed
                 async with async_session() as db:
                     await db.execute(
                         update(UserEvent)
@@ -77,16 +77,16 @@ class EventCollector:
                     "Failed to deliver event %s to user %s: %s",
                     event_type, user_id[:8], e,
                 )
-                # 事件已持久化，用户上线时会重新投递
+                # 事件已持久化，用户上线时会重新投递 | EN: The event has been persisted and will be re-delivered when the user comes online.
 
         self._pending.clear()
 
 
 async def deliver_pending_events(user_id: str) -> int:
-    """用户上线时调用：推送所有未消费事件。
+    """用户上线时调用：推送所有未消费事件。 / EN: """Called when the user comes online: push all unconsumed events.
 
     Returns:
-        投递成功的事件数
+        投递成功的事件数 / EN: The number of successfully delivered events
     """
     from src.websocket.manager import ws_manager
     from src.database import async_session
@@ -141,10 +141,10 @@ async def deliver_pending_events(user_id: str) -> int:
 
 
 async def cleanup_old_events(days: int = 7) -> int:
-    """清理已消费的旧事件（定期调用）。
+    """清理已消费的旧事件（定期调用）。 / EN: """Clean up old consumed events (called periodically).
 
     Returns:
-        删除的事件数
+        删除的事件数 / EN: Number of deleted events
     """
     from src.database import async_session
     from sqlalchemy import delete

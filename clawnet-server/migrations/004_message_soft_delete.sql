@@ -1,6 +1,6 @@
--- 004: 消息软删除支持
--- 新建 message_hidden 表，记录用户对消息的隐藏关系
--- 用户「删除」消息时，只插入一条 hidden 记录，不影响其他用户
+-- 004: 消息软删除支持 | EN: 004: Message soft deletion support
+-- 新建 message_hidden 表，记录用户对消息的隐藏关系 | EN: Create a new message_hidden table to record the user's hidden relationship with messages
+-- 用户「删除」消息时，只插入一条 hidden 记录，不影响其他用户 | EN: When a user "delete" a message, only one hidden record is inserted, which does not affect other users.
 
 CREATE TABLE IF NOT EXISTS message_hidden (
     message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,

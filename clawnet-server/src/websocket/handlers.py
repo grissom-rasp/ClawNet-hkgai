@@ -135,8 +135,8 @@ async def _handle_message_send(user_id: str, data: dict):
             )
 
             # Bridge user message to OpenClaw gateway.
-            # Agent 回复需要广播给所有人（包含发送者），所以传完整列表
-            # 隔离 OpenClaw 调用，其错误不应导致消息显示为发送失败
+            # Agent 回复需要广播给所有人（包含发送者），所以传完整列表 | EN: The Agent reply needs to be broadcast to everyone (including the sender), so the complete list is transmitted
+            # 隔离 OpenClaw 调用，其错误不应导致消息显示为发送失败 | EN: Isolate OpenClaw calls whose errors should not cause messages to appear as Send Failed
             try:
                 await _dispatch_openclaw_response(
                     db=db,
@@ -240,16 +240,16 @@ async def _dispatch_openclaw_response(
     Frontend currently consumes non-stream `message.new`, so stream deltas are
     merged in `openclaw_service` and persisted/broadcast only on completion.
     
-    LLM 自主判定流程：
-    1. 获取 Agent 的联系人列表
-    2. 注入能力声明 prompt
-    3. 发送给 OpenClaw
-    4. openclaw_service 中会解析回复并处理 A2A 意图
+    LLM 自主判定流程： / EN: LLM independent determination process:
+    1. 获取 Agent 的联系人列表 / EN: 1. Get the Agent’s contact list
+    2. 注入能力声明 prompt / EN: 2. Inject capability statement prompt
+    3. 发送给 OpenClaw / EN: 3. Send to OpenClaw
+    4. openclaw_service 中会解析回复并处理 A2A 意图 / EN: 4. The reply will be parsed and the A2A intent processed in openclaw_service
     """
     if not user_text:
         return
 
-    # 跳过 agent_task 类型的会话（A2A 对话有独立的 session key 管理）
+    # 跳过 agent_task 类型的会话（A2A 对话有独立的 session key 管理） | EN: Skip agent_task type sessions (A2A conversations have independent session key management)
     from src.models.conversation import Conversation
     conv = await db.get(Conversation, uuid.UUID(conv_id))
     if not conv or conv.type == "agent_task":
@@ -279,12 +279,12 @@ async def _dispatch_openclaw_response(
     if not selected_agent:
         return
 
-    # 构造增强消息（注入能力声明）
+    # 构造增强消息（注入能力声明） | EN: Construct enhanced messages (injection capability declarations)
     enhanced_message = await _build_enhanced_message(db, selected_agent, user_text)
 
     session_key = f"clawnet:{conv_id}"
 
-    # 持久化 session key 到数据库
+    # 持久化 session key 到数据库 | EN: Persistence session key to database
     await upsert_session_key(
         db,
         conversation_id=conv_id,
@@ -305,19 +305,19 @@ async def _dispatch_openclaw_response(
 
 
 async def _build_enhanced_message(db: AsyncSession, agent: Agent, user_text: str) -> str:
-    """构造增强消息，注入能力声明
+    """构造增强消息，注入能力声明 / EN: """Construct enhanced messages and inject capability statements
     
     Args:
-        db: 数据库会话
-        agent: 当前 Agent
-        user_text: 用户原始消息
+        db: 数据库会话 / EN: db: database session
+        agent: 当前 Agent / EN: agent: current Agent
+        user_text: 用户原始消息 / EN: user_text: user original message
         
     Returns:
-        增强后的消息（包含能力声明 + 用户消息）
+        增强后的消息（包含能力声明 + 用户消息） / EN: Enhanced message (contains capability statement + user message)
     """
     from src.services.prompt_templates import build_capability_prompt_i18n, get_user_lang, get_user_msg_label
 
-    # 获取 Agent 的联系人列表
+    # 获取 Agent 的联系人列表 | EN: Get the Agent's contact list
     contacts = await _get_agent_contacts(db, agent)
 
     logger.debug(
@@ -328,7 +328,7 @@ async def _build_enhanced_message(db: AsyncSession, agent: Agent, user_text: str
     if not contacts:
         return user_text
 
-    # 获取当前 Agent 所属用户名称（让 LLM 知道自己是谁）
+    # 获取当前 Agent 所属用户名称（让 LLM 知道自己是谁） | EN: Get the user name of the current Agent (let LLM know who he is)
     from src.models.user import User
     my_owner_name = ""
     owner = await db.get(User, agent.owner_id)
@@ -336,14 +336,14 @@ async def _build_enhanced_message(db: AsyncSession, agent: Agent, user_text: str
     if owner:
         my_owner_name = owner.display_name
 
-    # 构造能力声明 prompt
+    # 构造能力声明 prompt | EN: Construct capability statement prompt
     capability_prompt = build_capability_prompt_i18n(contacts, my_owner_name=my_owner_name, lang=lang)
 
     if not capability_prompt:
         return user_text
 
-    # 注入方式：以系统指令格式包裹，让 LLM 更容易识别
-    # 将用户消息明确标记，帮助 LLM 区分指令和用户输入
+    # 注入方式：以系统指令格式包裹，让 LLM 更容易识别 | EN: Injection method: wrapped in system command format to make LLM easier to identify
+    # 将用户消息明确标记，帮助 LLM 区分指令和用户输入 | EN: Clearly label user messages to help LLM distinguish instructions from user input
     enhanced = (
         f"{capability_prompt}\n\n"
         f"---\n"
@@ -356,13 +356,13 @@ async def _build_enhanced_message(db: AsyncSession, agent: Agent, user_text: str
 
 
 async def _get_agent_contacts(db: AsyncSession, agent: Agent) -> list[dict]:
-    """获取 Agent 可联系的其他用户列表（基于联系人关系）
+    """获取 Agent 可联系的其他用户列表（基于联系人关系） / EN: """Get the list of other users that the Agent can contact (based on contact relationships)
 
-    按 Owner（用户）去重，每个好友只出现一次。
-    来源 1（model_config 预配置）和来源 2（自动发现）互补合并。
+    按 Owner（用户）去重，每个好友只出现一次。 / EN: Press Owner to remove duplicates. Each friend only appears once.
+    来源 1（model_config 预配置）和来源 2（自动发现）互补合并。 / EN: Source 1 (model_config preconfiguration) and Source 2 (autodiscovery) are complementary merged.
 
-    这不是 Rule Engine — 只是"通讯录"，不决定何时联系。
-    何时联系完全由 LLM 自主判断。
+    这不是 Rule Engine — 只是"通讯录"，不决定何时联系。 / EN: This is not a Rule Engine — it's just an "address book" that doesn't decide when to contact you.
+    何时联系完全由 LLM 自主判断。 / EN: When to contact is entirely at the discretion of LLM.
     """
     from src.models.user import User
     from src.models.tag import Tag
@@ -370,7 +370,7 @@ async def _get_agent_contacts(db: AsyncSession, agent: Agent) -> list[dict]:
     seen_owner_ids: set[uuid.UUID] = set()
     contacts = []
 
-    # 来源 1：从 Agent 的 model_config 中获取预配置的联系人（需校验好友关系）
+    # 来源 1：从 Agent 的 model_config 中获取预配置的联系人（需校验好友关系） | EN: Source 1: Get the preconfigured contacts from the Agent's model_config (need to verify the friend relationship)
     if agent.model_config_data and isinstance(agent.model_config_data, dict):
         from src.services.contact_check import are_owners_contacts
         configured_contacts = agent.model_config_data.get("contacts", [])
@@ -388,7 +388,7 @@ async def _get_agent_contacts(db: AsyncSession, agent: Agent) -> list[dict]:
                 if target_agent.id == agent.id:
                     continue
 
-                # 按 Owner 去重
+                # 按 Owner 去重 | EN: Press Owner to remove duplicates
                 if target_agent.owner_id in seen_owner_ids:
                     continue
 
@@ -408,7 +408,7 @@ async def _get_agent_contacts(db: AsyncSession, agent: Agent) -> list[dict]:
             except Exception:
                 continue
 
-    # 来源 2：自动发现好友（基于联系人关系），与来源 1 互补
+    # 来源 2：自动发现好友（基于联系人关系），与来源 1 互补 | EN: Source 2: Automatic discovery of friends (based on contact relationships), complementary to Source 1
     from sqlalchemy import select
     from src.models.contact import Contact
 
@@ -482,7 +482,7 @@ async def _handle_dialog_intent_authorize(user_id: str, data: dict):
 async def _handle_dialog_approve(user_id: str, data: dict):
     """Handle dialog.approve from client.
     
-    用于通过 WebSocket 处理对话授权响应。
+    用于通过 WebSocket 处理对话授权响应。 / EN: Used to handle conversation authorization responses via WebSocket.
     """
     msg_data = data.get("data", {})
     request_id = data.get("request_id", "")
@@ -525,7 +525,7 @@ async def _handle_dialog_approve(user_id: str, data: dict):
 async def _handle_dialog_terminate(user_id: str, data: dict):
     """Handle dialog.terminate from client.
     
-    用于通过 WebSocket 终止对话。
+    用于通过 WebSocket 终止对话。 / EN: Used to terminate a conversation via WebSocket.
     """
     msg_data = data.get("data", {})
     request_id = data.get("request_id", "")
@@ -567,9 +567,9 @@ async def _handle_dialog_terminate(user_id: str, data: dict):
 async def _handle_message_stop(user_id: str, data: dict):
     """Handle message.stop from client.
 
-    用户点击"停止生成"按钮时触发。
-    1. 向 OpenClaw Gateway 发送 chat.abort，中止模型生成
-    2. 通知所有参与者流式消息已结束
+    用户点击"停止生成"按钮时触发。 / EN: Fired when the user clicks the "Stop Generation" button.
+    1. 向 OpenClaw Gateway 发送 chat.abort，中止模型生成 / EN: 1. Send chat.abort to OpenClaw Gateway to abort model generation
+    2. 通知所有参与者流式消息已结束 / EN: 2. Notify all participants that the streaming message has ended
     """
     msg_data = data.get("data", {})
     conv_id = msg_data.get("conversation_id")
@@ -579,7 +579,7 @@ async def _handle_message_stop(user_id: str, data: dict):
 
     async with async_session() as db:
         try:
-            # 获取会话的所有参与者
+            # 获取会话的所有参与者 | EN: Get all participants of a session
             participant_result = await db.execute(
                 select(ConversationParticipant.participant_id).where(
                     ConversationParticipant.conversation_id == uuid.UUID(conv_id)
@@ -587,7 +587,7 @@ async def _handle_message_stop(user_id: str, data: dict):
             )
             participant_ids = [str(row[0]) for row in participant_result.all()]
 
-            # 广播停止事件，让前端清理所有该会话的流式消息
+            # 广播停止事件，让前端清理所有该会话的流式消息 | EN: Broadcast stop event to let the front end clean up all streaming messages for the session
             await ws_manager.broadcast_message(
                 participant_ids,
                 {
@@ -598,7 +598,7 @@ async def _handle_message_stop(user_id: str, data: dict):
                 },
             )
 
-            # 向 OpenClaw Gateway 发送 chat.abort，中止模型生成
+            # 向 OpenClaw Gateway 发送 chat.abort，中止模型生成 | EN: Send chat.abort to OpenClaw Gateway to abort model generation
             session_key = f"clawnet:{conv_id}"
             try:
                 result = await openclaw_service.abort_chat(
@@ -626,7 +626,7 @@ async def _handle_message_stop(user_id: str, data: dict):
 async def _handle_dialog_extend(user_id: str, data: dict):
     """Handle dialog.extend from client.
     
-    用于通过 WebSocket 延长对话轮数。
+    用于通过 WebSocket 延长对话轮数。 / EN: Used to extend conversation rounds via WebSocket.
     """
     msg_data = data.get("data", {})
     request_id = data.get("request_id", "")

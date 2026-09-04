@@ -1,8 +1,8 @@
 """
-DiscoveryTask 模型
+DiscoveryTask 模型 / EN: DiscoveryTask model
 
-管理多用户发现任务的生命周期。一个 DiscoveryTask 可以编排多个 A2A 对话，
-实现链式发现和多目标并行询问。
+管理多用户发现任务的生命周期。一个 DiscoveryTask 可以编排多个 A2A 对话， / EN: Manage the lifecycle of multi-user discovery tasks. A DiscoveryTask can orchestrate multiple A2A conversations,
+实现链式发现和多目标并行询问。 / EN: Implement chain discovery and multi-target parallel query.
 """
 
 import uuid
@@ -33,14 +33,14 @@ class DiscoveryTask(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    # 关联原始会话
+    # 关联原始会话 | EN: Relate original session
     source_conversation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("conversations.id", ondelete="CASCADE"),
         nullable=False,
     )
 
-    # 发起方
+    # 发起方 | EN: Initiator
     initiator_agent_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("agents.id", ondelete="CASCADE"),
@@ -52,7 +52,7 @@ class DiscoveryTask(Base):
         nullable=False,
     )
 
-    # 状态
+    # 状态 | EN: state
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
@@ -60,22 +60,22 @@ class DiscoveryTask(Base):
     )
     original_intent: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # 限制
+    # 限制 | EN: limit
     max_hops: Mapped[int] = mapped_column(Integer, default=5)
     current_hop_count: Mapped[int] = mapped_column(Integer, default=0)
     max_concurrent: Mapped[int] = mapped_column(Integer, default=2)
 
-    # JSON 字段：待询问列表 [{target_owner, topic, priority}]
+    # JSON 字段：待询问列表 [{target_owner, topic, priority}] | EN: JSON field: List to be asked [{target_owner, topic, priority}]
     pending_queries: Mapped[list] = mapped_column(JSON, default=list)
-    # JSON 字段：已完成结果 [{target_owner, topic, summary, session_id, status}]
+    # JSON 字段：已完成结果 [{target_owner, topic, summary, session_id, status}] | EN: JSON fields: Completed results [{target_owner, topic, summary, session_id, status}]
     completed_results: Mapped[list] = mapped_column(JSON, default=list)
-    # JSON 字段：进行中的会话 [{session_id, target_owner, topic}]
+    # JSON 字段：进行中的会话 [{session_id, target_owner, topic}] | EN: JSON fields: ongoing session [{session_id, target_owner, topic}]
     active_sessions: Mapped[list] = mapped_column(JSON, default=list)
 
-    # 乐观锁
+    # 乐观锁 | EN: optimistic locking
     version: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
 
-    # 时间戳
+    # 时间戳 | EN: Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -90,7 +90,7 @@ class DiscoveryTask(Base):
         nullable=True,
     )
 
-    # 关系
+    # 关系 | EN: relation
     source_conversation = relationship("Conversation")
     initiator_agent = relationship("Agent", foreign_keys=[initiator_agent_id])
     initiator_owner = relationship("User", foreign_keys=[initiator_owner_id])

@@ -1,7 +1,7 @@
 """
 Discovery Task API
 
-多用户发现任务的 REST API 端点。
+多用户发现任务的 REST API 端点。 / EN: REST API endpoint for multi-user discovery tasks.
 """
 
 import uuid

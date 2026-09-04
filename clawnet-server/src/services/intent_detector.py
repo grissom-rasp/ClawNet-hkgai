@@ -1,13 +1,13 @@
 """
 Intent Detector
 
-检测 Agent 回复中的意图，识别需要与其他 Agent 对话的场景。
+检测 Agent 回复中的意图，识别需要与其他 Agent 对话的场景。 / EN: Detect intent in Agent replies and identify scenarios that require dialogue with other Agents.
 
-触发场景示例：
-- "我需要联系张三的助手"
-- "帮我问一下李四的 Agent"
-- "请你去查询王五那边的信息"
-- "让我和小明的数字分身对话"
+触发场景示例： / EN: Trigger scenario example:
+- "我需要联系张三的助手" / EN: - "I need to contact Zhang San's assistant"
+- "帮我问一下李四的 Agent" / EN: - "Help me ask Li Si's Agent"
+- "请你去查询王五那边的信息" / EN: - "Please go check the information on Wang Wu's side"
+- "让我和小明的数字分身对话" / EN: - "Let me talk to Xiao Ming's digital clone"
 """
 
 import re
@@ -35,16 +35,16 @@ class AgentDialogIntent:
     raw_text: str                   # 原始文本
 
 
-# 意图检测正则模式
+# 意图检测正则模式 | EN: Intent detection regular pattern
 INTENT_PATTERNS = [
-    # "联系/找/问 XXX 的助手/Agent/数字分身"
+    # "联系/找/问 XXX 的助手/Agent/数字分身" | EN: "Contact/find/ask XXX's assistant/Agent/digital clone"
     re.compile(
         r'(?:联系|找|问|询问|咨询|请教)\s*(?:一下\s*)?'
         r'[「"\'"]?([^「"\'"\s]{1,20})[」"\'"]?\s*的?\s*'
         r'(?:助手|Agent|agent|数字分身|私人助手|AI助手)',
         re.IGNORECASE
     ),
-    # "让我和 XXX 的助手对话"
+    # "让我和 XXX 的助手对话" | EN: "Let me talk to XXX's assistant"
     re.compile(
         r'(?:让我|帮我|请你?)\s*(?:和|与|跟)\s*'
         r'[「"\'"]?([^「"\'"\s]{1,20})[」"\'"]?\s*的?\s*'
@@ -52,14 +52,14 @@ INTENT_PATTERNS = [
         r'(?:对话|聊|沟通|联系|说话)',
         re.IGNORECASE
     ),
-    # "去问一下 XXX"（隐式意图）
+    # "去问一下 XXX"（隐式意图） | EN: "Go ask XXX" (implicit intention)
     re.compile(
         r'(?:去|帮我去)\s*(?:问|查询|了解|确认)\s*(?:一下\s*)?'
         r'[「"\'"]?([^「"\'"\s]{1,20})[」"\'"]?\s*'
         r'(?:那边|那里)?',
         re.IGNORECASE
     ),
-    # "XXX 的 Agent/助手 能帮我..."
+    # "XXX 的 Agent/助手 能帮我..." | EN: "XXX's Agent/Assistant can help me..."
     re.compile(
         r'[「"\'"]?([^「"\'"\s]{1,20})[」"\'"]?\s*的?\s*'
         r'(?:助手|Agent|agent|数字分身)\s*'
@@ -68,7 +68,7 @@ INTENT_PATTERNS = [
     ),
 ]
 
-# 用于提取议题的模式
+# 用于提取议题的模式 | EN: Pattern used to extract issues
 TOPIC_PATTERNS = [
     re.compile(r'(?:关于|有关|询问|查询|了解)\s*(.{5,50}?)(?:\s*的?\s*(?:信息|情况|事情|问题)|$)'),
     re.compile(r'(?:帮我|请你?)\s*(.{5,50}?)(?:\s*吗?\s*[。？?！!]|$)'),
@@ -76,24 +76,24 @@ TOPIC_PATTERNS = [
 
 
 def detect_agent_dialog_intent(text: str) -> Optional[AgentDialogIntent]:
-    """检测文本中的 Agent 对话意图
+    """检测文本中的 Agent 对话意图 / EN: """Detect Agent dialogue intent in text
     
     Args:
-        text: Agent 的回复文本
+        text: Agent 的回复文本 / EN: text: Agent’s reply text
         
     Returns:
-        AgentDialogIntent 如果检测到意图，否则 None
+        AgentDialogIntent 如果检测到意图，否则 None / EN: AgentDialogIntent if intent is detected, otherwise None
     """
     for pattern in INTENT_PATTERNS:
         match = pattern.search(text)
         if match:
             target_name = match.group(1).strip()
             
-            # 过滤掉常见的非人名词
+            # 过滤掉常见的非人名词 | EN: Filter out common non-human nouns
             if target_name.lower() in {'你', '我', '他', '她', '它', '这个', '那个', 'the', 'a'}:
                 continue
             
-            # 提取议题
+            # 提取议题 | EN: Extract issues
             topic = _extract_topic(text, target_name)
             
             return AgentDialogIntent(
@@ -110,18 +110,18 @@ def detect_agent_dialog_intent(text: str) -> Optional[AgentDialogIntent]:
 
 def _extract_topic(text: str, target_name: str) -> str:
     """从文本中提取对话议题"""
-    # 尝试匹配议题模式
+    # 尝试匹配议题模式 | EN: Try to match issue pattern
     for pattern in TOPIC_PATTERNS:
         match = pattern.search(text)
         if match:
             topic = match.group(1).strip()
-            # 移除目标用户名
+            # 移除目标用户名 | EN: Remove target username
             topic = topic.replace(target_name, '').strip()
             if len(topic) >= 5:
                 return topic
     
-    # 如果没有匹配到，使用文本的主要部分
-    # 移除常见的开头短语
+    # 如果没有匹配到，使用文本的主要部分 | EN: If no match is found, use the main part of the text
+    # 移除常见的开头短语 | EN: Remove common opening phrases
     cleaned = re.sub(r'^(?:我想|我需要|请你?|帮我|让我)\s*', '', text)
     cleaned = re.sub(r'[。？?！!]+$', '', cleaned)
     
@@ -136,24 +136,24 @@ async def resolve_target_agent(
     intent: AgentDialogIntent,
     initiator_owner_id: str,
 ) -> AgentDialogIntent:
-    """解析目标用户和 Agent
+    """解析目标用户和 Agent / EN: """Resolve the target user and Agent
     
-    尝试从联系人列表中匹配目标用户，并找到其 Agent。
+    尝试从联系人列表中匹配目标用户，并找到其 Agent。 / EN: Try to match the target user from the contact list and find their Agent.
     
     Args:
-        db: 数据库会话
-        intent: 检测到的意图
-        initiator_owner_id: 发起方 Owner 的 ID
+        db: 数据库会话 / EN: db: database session
+        intent: 检测到的意图 / EN: intent: the detected intent
+        initiator_owner_id: 发起方 Owner 的 ID / EN: initiator_owner_id: ID of the initiator Owner
         
     Returns:
-        更新后的 AgentDialogIntent
+        更新后的 AgentDialogIntent / EN: Updated AgentDialogIntent
     """
     import uuid
     
-    # 1. 在联系人中搜索匹配的用户（仅限好友）
+    # 1. 在联系人中搜索匹配的用户（仅限好友） | EN: 1. Search for matching users in contacts (friends only)
     from src.models.contact import Contact
 
-    # 查询发起方的好友列表
+    # 查询发起方的好友列表 | EN: Query the initiator's friend list
     friends_result = await db.execute(
         select(Contact.contact_id).where(
             Contact.user_id == uuid.UUID(initiator_owner_id),
@@ -164,7 +164,7 @@ async def resolve_target_agent(
 
     target_user = None
     if friend_ids:
-        # 精确匹配（仅在好友中搜索）
+        # 精确匹配（仅在好友中搜索） | EN: Exact match (search among friends only)
         result = await db.execute(
             select(User).where(
                 User.id.in_(friend_ids),
@@ -174,7 +174,7 @@ async def resolve_target_agent(
         target_user = result.scalar_one_or_none()
 
         if not target_user:
-            # 模糊匹配（仅在好友中搜索）
+            # 模糊匹配（仅在好友中搜索） | EN: Fuzzy match (search among friends only)
             result = await db.execute(
                 select(User).where(
                     User.id.in_(friend_ids),
@@ -186,7 +186,7 @@ async def resolve_target_agent(
     if target_user:
         intent.target_user_id = str(target_user.id)
         
-        # 2. 查找该用户的 Agent
+        # 2. 查找该用户的 Agent | EN: 2. Find the user’s Agent
         result = await db.execute(
             select(Agent).where(
                 Agent.owner_id == target_user.id,
@@ -211,10 +211,10 @@ async def resolve_target_agent(
 
 
 class AgentResponseIntentAnalyzer:
-    """Agent 回复意图分析器
+    """Agent 回复意图分析器 / EN: """Agent Reply Intent Analyzer
     
-    在 Agent 回复后分析是否需要与其他 Agent 对话，
-    如果需要则触发确认流程。
+    在 Agent 回复后分析是否需要与其他 Agent 对话， / EN: After the Agent replies, analyze whether it is necessary to talk to other Agents.
+    如果需要则触发确认流程。 / EN: Trigger the confirmation process if necessary.
     """
     
     def __init__(self):
@@ -228,22 +228,22 @@ class AgentResponseIntentAnalyzer:
         conversation_id: str,
         response_text: str,
     ) -> Optional[dict]:
-        """分析 Agent 回复并可能触发 Agent 对话
+        """分析 Agent 回复并可能触发 Agent 对话 / EN: """Analyze Agent replies and possibly trigger Agent conversations
         
         Args:
-            db: 数据库会话
-            agent_id: 当前 Agent ID
+            db: 数据库会话 / EN: db: database session
+            agent_id: 当前 Agent ID / EN: agent_id: current Agent ID
             owner_id: Agent Owner ID
-            conversation_id: 当前会话 ID
-            response_text: Agent 的回复文本
+            conversation_id: 当前会话 ID / EN: conversation_id: current conversation ID
+            response_text: Agent 的回复文本 / EN: response_text: Agent’s reply text
             
         Returns:
-            如果检测到意图，返回意图信息供发送确认卡片；否则返回 None
+            如果检测到意图，返回意图信息供发送确认卡片；否则返回 None / EN: If an intent is detected, return intent information for sending a confirmation card; otherwise return None
         """
         if not self._enabled:
             return None
         
-        # 检测意图
+        # 检测意图 | EN: Detect intent
         intent = detect_agent_dialog_intent(response_text)
         if not intent:
             return None
@@ -253,25 +253,25 @@ class AgentResponseIntentAnalyzer:
             f"topic={intent.topic}, confidence={intent.confidence}"
         )
         
-        # 置信度过低则不触发
+        # 置信度过低则不触发 | EN: If the confidence is too low, it will not trigger
         if intent.confidence < 0.5:
             logger.info(f"Intent confidence too low ({intent.confidence}), skipping")
             return None
         
-        # 解析目标 Agent
+        # 解析目标 Agent | EN: Parse target Agent
         intent = await resolve_target_agent(db, intent, owner_id)
         
-        # 如果没有找到目标 Agent，不触发
+        # 如果没有找到目标 Agent，不触发 | EN: If the target Agent is not found, it will not trigger
         if not intent.target_agent_id:
             logger.info("Could not resolve target agent, skipping")
             return None
         
-        # 获取当前 Agent 信息
+        # 获取当前 Agent 信息 | EN: Get current Agent information
         initiator_agent = await db.get(Agent, agent_id)
         if not initiator_agent:
             return None
         
-        # 获取目标 Agent 信息
+        # 获取目标 Agent 信息 | EN: Get target Agent information
         import uuid
         target_agent = await db.get(Agent, uuid.UUID(intent.target_agent_id))
         target_user = await db.get(User, uuid.UUID(intent.target_user_id)) if intent.target_user_id else None
@@ -309,5 +309,5 @@ class AgentResponseIntentAnalyzer:
         }
 
 
-# 全局分析器实例
+# 全局分析器实例 | EN: Global analyzer instance
 intent_analyzer = AgentResponseIntentAnalyzer()

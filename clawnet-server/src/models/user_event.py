@@ -1,8 +1,8 @@
 """
-用户事件表
+用户事件表 / EN: User event table
 
-持久化发送给用户的实时事件，确保离线用户上线后能收到错过的通知。
-每个事件对应一次 WebSocket 推送，consumed_at 标记是否已成功投递。
+持久化发送给用户的实时事件，确保离线用户上线后能收到错过的通知。 / EN: Persistence of real-time events sent to users ensures that offline users can receive missed notifications when they come online.
+每个事件对应一次 WebSocket 推送，consumed_at 标记是否已成功投递。 / EN: Each event corresponds to a WebSocket push, and consumed_at marks whether it has been successfully delivered.
 """
 
 import uuid
@@ -37,7 +37,7 @@ class UserEvent(Base):
     )
 
     __table_args__ = (
-        # 查询未消费事件：WHERE user_id = ? AND consumed_at IS NULL ORDER BY created_at
+        # 查询未消费事件：WHERE user_id = ? AND consumed_at IS NULL ORDER BY created_at | EN: Query unconsumed events: WHERE user_id = ? AND consumed_at IS NULL ORDER BY created_at
         Index(
             "idx_user_events_pending",
             "user_id",

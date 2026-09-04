@@ -1,8 +1,8 @@
 """
-Agent Session Key 持久化模型
+Agent Session Key 持久化模型 / EN: Agent Session Key persistence model
 
-记录每个「用户 ↔ Agent」的 OpenClaw session key 及 Gateway 连接信息，
-供外挂程序直接从数据库读取。
+记录每个「用户 ↔ Agent」的 OpenClaw session key 及 Gateway 连接信息， / EN: Record the OpenClaw session key and Gateway connection information of each "User ↔ Agent",
+供外挂程序直接从数据库读取。 / EN: For plug-in programs to read directly from the database.
 """
 import uuid
 from datetime import datetime, timezone

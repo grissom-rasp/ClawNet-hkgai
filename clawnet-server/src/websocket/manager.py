@@ -1,7 +1,7 @@
 """
-WebSocket 连接管理器
+WebSocket 连接管理器 / EN: WebSocket connection manager
 
-管理用户和 Agent 的 WebSocket 连接，支持实时消息推送。
+管理用户和 Agent 的 WebSocket 连接，支持实时消息推送。 / EN: Manage WebSocket connections between users and Agents, and support real-time message push.
 """
 
 import uuid
@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 class ConnectionManager:
     """WebSocket connection manager for real-time messaging.
     
-    支持：
-    - 用户前端 WebSocket 连接
-    - Agent 状态通知
-    - Agent 对话会话事件广播
+    支持： / EN: support:
+    - 用户前端 WebSocket 连接 / EN: - User front-end WebSocket connection
+    - Agent 状态通知 / EN: - Agent status notification
+    - Agent 对话会话事件广播 / EN: - Agent dialogue session event broadcast
     """
 
     def __init__(self):
@@ -74,7 +74,7 @@ class ConnectionManager:
     def is_online(self, user_id: str) -> bool:
         return user_id in self.active_connections
 
-    # 不需要频繁打印日志的消息类型
+    # 不需要频繁打印日志的消息类型 | EN: Message types that do not require frequent log printing
     _QUIET_MESSAGE_TYPES = {"pong", "message.stream_delta"}
 
     async def send_to_user(self, user_id: str, message: dict):
@@ -129,9 +129,9 @@ class ConnectionManager:
         conversation_id: str,
         sender: dict,
     ):
-        """发送流式消息开始事件
+        """发送流式消息开始事件 / EN: """Send streaming message start event
         
-        通知前端一条新的流式消息即将开始。
+        通知前端一条新的流式消息即将开始。 / EN: Notifies the frontend that a new streaming message is about to start.
         """
         await self.broadcast_message(
             participant_ids,
@@ -154,9 +154,9 @@ class ConnectionManager:
         delta: str,
         full_text: str,
     ):
-        """发送流式消息增量更新
+        """发送流式消息增量更新 / EN: """Send streaming message incremental updates
         
-        发送新增的文本片段。
+        发送新增的文本片段。 / EN: Send the added text fragment.
         """
         await self.broadcast_message(
             participant_ids,
@@ -178,9 +178,9 @@ class ConnectionManager:
         conversation_id: str,
         final_text: str,
     ):
-        """发送流式消息结束事件
+        """发送流式消息结束事件 / EN: """Send streaming message end event
         
-        通知前端流式消息已完成，提供最终文本。
+        通知前端流式消息已完成，提供最终文本。 / EN: Notifies the front-end that the streaming message is complete, providing the final text.
         """
         await self.broadcast_message(
             participant_ids,
@@ -248,9 +248,9 @@ class ConnectionManager:
         responder_agent: dict,
         created_at: datetime,
     ):
-        """发送对话授权请求给 Owner
+        """发送对话授权请求给 Owner / EN: """Send conversation authorization request to Owner
         
-        当其他用户的 Agent 想要与当前用户的 Agent 对话时发送。
+        当其他用户的 Agent 想要与当前用户的 Agent 对话时发送。 / EN: Sent when another user's Agent wants to talk to the current user's Agent.
         """
         await self.send_to_user(owner_id, {
             "type": "dialog.approval_request",
@@ -273,9 +273,9 @@ class ConnectionManager:
         new_status: str,
         reason: Optional[str] = None,
     ):
-        """发送对话状态变更通知
+        """发送对话状态变更通知 / EN: """Send conversation status change notification
         
-        通知参与方 Owner 对话状态变更。
+        通知参与方 Owner 对话状态变更。 / EN: Notify the participating Owner of the conversation status change.
         """
         await self.send_to_users(user_ids, {
             "type": "dialog.status_change",
@@ -299,9 +299,9 @@ class ConnectionManager:
         speaker_agent_id: str,
         dialog_status: Optional[str] = None,
     ):
-        """发送对话轮次完成通知
+        """发送对话轮次完成通知 / EN: """Send conversation round completion notification
         
-        让 Owner 知道当前对话进展。
+        让 Owner 知道当前对话进展。 / EN: Let the owner know the progress of the current conversation.
         """
         await self.send_to_users(user_ids, {
             "type": "dialog.round_complete",
@@ -365,9 +365,9 @@ class ConnectionManager:
         current_round: int,
         max_rounds: int,
     ):
-        """发送对话暂停通知
+        """发送对话暂停通知 / EN: """Send conversation pause notification
         
-        当达到轮数上限或检测到死锁时，通知 Owner 决定是否继续。
+        当达到轮数上限或检测到死锁时，通知 Owner 决定是否继续。 / EN: When the upper limit of rounds is reached or a deadlock is detected, the owner is notified to decide whether to continue.
         """
         await self.send_to_users(user_ids, {
             "type": "dialog.paused",

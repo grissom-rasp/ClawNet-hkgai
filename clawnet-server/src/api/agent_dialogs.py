@@ -1,7 +1,7 @@
 """
 Agent Dialog API
 
-Agent-to-Agent 对话的 REST API 端点。
+Agent-to-Agent 对话的 REST API 端点。 / EN: REST API endpoint for Agent-to-Agent conversations.
 """
 
 import uuid
@@ -34,12 +34,12 @@ async def create_dialog_session(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """创建 Agent 对话会话
+    """创建 Agent 对话会话 / EN: """Create Agent conversation session
     
-    发起方 Owner 调用此接口，系统会：
-    1. 创建会话
-    2. 自动批准发起方
-    3. 向接收方 Owner 发送授权请求
+    发起方 Owner 调用此接口，系统会： / EN: When the initiator Owner calls this interface, the system will:
+    1. 创建会话 / EN: 1. Create a session
+    2. 自动批准发起方 / EN: 2. Automatically approve the initiator
+    3. 向接收方 Owner 发送授权请求 / EN: 3. Send an authorization request to the recipient Owner
     """
     session = await agent_dialog_orchestrator.create_session(db, req, user.id)
     return ApiResponse(data=session)
@@ -91,9 +91,9 @@ async def approve_dialog_session(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """批准或拒绝 Agent 对话请求
+    """批准或拒绝 Agent 对话请求 / EN: """Approve or deny Agent conversation request
     
-    接收方 Owner 调用此接口处理授权请求。
+    接收方 Owner 调用此接口处理授权请求。 / EN: The receiver Owner calls this interface to process the authorization request.
     """
     session = await agent_dialog_orchestrator.approve_session(
         db, session_id, user.id, req.approved, req.reason
@@ -108,9 +108,9 @@ async def terminate_dialog_session(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """终止 Agent 对话会话
+    """终止 Agent 对话会话 / EN: """Terminate Agent conversation session
     
-    任一方 Owner 都可以随时终止对话。
+    任一方 Owner 都可以随时终止对话。 / EN: Either owner can terminate the conversation at any time.
     """
     session = await agent_dialog_orchestrator.terminate_session(
         db, session_id, user.id, req.reason
@@ -125,9 +125,9 @@ async def extend_dialog_session(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """延长 Agent 对话会话的轮数
+    """延长 Agent 对话会话的轮数 / EN: """Extend the number of rounds in the Agent dialogue session
     
-    当对话暂停（达到轮数上限或检测到僵局）时，Owner 可以追加轮数继续对话。
+    当对话暂停（达到轮数上限或检测到僵局）时，Owner 可以追加轮数继续对话。 / EN: When the conversation is paused (the maximum number of rounds is reached or a deadlock is detected), the Owner can continue the conversation by adding additional rounds.
     """
     session = await agent_dialog_orchestrator.extend_session(
         db, session_id, user.id, req.additional_rounds
@@ -193,15 +193,15 @@ async def get_dialog_messages(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """获取 Agent 对话会话的消息历史
+    """获取 Agent 对话会话的消息历史 / EN: """Get the message history of the Agent conversation session
     
-    这是一个便捷接口，实际数据存储在 conversations 表中。
+    这是一个便捷接口，实际数据存储在 conversations 表中。 / EN: This is a convenience interface, the actual data is stored in the conversations table.
     """
     from sqlalchemy import select
     from src.models.message import Message
     from src.models.agent_dialog_session import AgentDialogSession
     
-    # 获取会话
+    # 获取会话 | EN: Get session
     session = await db.get(AgentDialogSession, session_id)
     if not session:
         raise ValueError(f"Session {session_id} not found")
@@ -209,7 +209,7 @@ async def get_dialog_messages(
     if not session.is_participant_owner(user.id):
         raise ValueError("You are not a participant owner of this session")
     
-    # 获取消息
+    # 获取消息 | EN: Get news
     query = select(Message).where(
         Message.conversation_id == session.conversation_id
     )
@@ -224,7 +224,7 @@ async def get_dialog_messages(
     result = await db.execute(query)
     messages = result.scalars().all()
     
-    # 构建响应
+    # 构建响应 | EN: Build response
     return ApiResponse(data={
         "messages": [
             {

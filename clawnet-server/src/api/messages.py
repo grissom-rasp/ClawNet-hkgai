@@ -158,7 +158,7 @@ async def send_message(
     print(f"[API] Broadcast done", flush=True)
 
     # HTTP fallback path should still trigger OpenClaw agent reply.
-    # 跳过 agent_task 类型的会话（A2A 对话有独立的 session key 管理）
+    # 跳过 agent_task 类型的会话（A2A 对话有独立的 session key 管理） | EN: Skip agent_task type sessions (A2A conversations have independent session key management)
     from src.models.conversation import Conversation
     conv = await db.get(Conversation, conv_id)
     if req.content_type == "text" and (conv and conv.type != "agent_task"):
@@ -185,7 +185,7 @@ async def send_message(
         if selected_agent:
             session_key = f"clawnet:{conv_id}"
 
-            # 持久化 session key 到数据库
+            # 持久化 session key 到数据库 | EN: Persistence session key to database
             await upsert_session_key(
                 db,
                 conversation_id=str(conv_id),
@@ -194,7 +194,7 @@ async def send_message(
                 session_key=session_key,
             )
 
-            # 连接池会自动为用户创建连接，并处理连接失败的情况
+            # 连接池会自动为用户创建连接，并处理连接失败的情况 | EN: The connection pool automatically creates connections for users and handles connection failures.
             await openclaw_service.send_chat(
                 conversation_id=str(conv_id),
                 user_id=str(user.id),

@@ -39,7 +39,7 @@ async def _update_user_status(user_id: str, status: str) -> None:
 
 @router.websocket("/ws/v1/messages")
 async def websocket_endpoint(websocket: WebSocket):
-    # 尝试从 query param 快速认证（有 token 时先验证再 accept）
+    # 尝试从 query param 快速认证（有 token 时先验证再 accept） | EN: Try to quickly authenticate from query param (verify first and then accept when there is token)
     token = websocket.query_params.get("token")
 
     if token:
@@ -51,7 +51,7 @@ async def websocket_endpoint(websocket: WebSocket):
         user_id = payload["sub"]
         await websocket.accept()
     else:
-        # 无 query token，需要接受连接后等待 auth 消息
+        # 无 query token，需要接受连接后等待 auth 消息 | EN: No query token, you need to wait for the auth message after accepting the connection
         await websocket.accept()
         try:
             data = await asyncio.wait_for(websocket.receive_json(), timeout=10)
@@ -113,6 +113,6 @@ async def websocket_endpoint(websocket: WebSocket):
         if removed_nodes:
             asyncio.create_task(_unregister_proxy_nodes(user_id, removed_nodes))
         await ws_manager.disconnect(websocket, user_id)
-        # 如果该用户没有其他活跃连接，标记为离线
+        # 如果该用户没有其他活跃连接，标记为离线 | EN: If the user has no other active connections, mark as offline
         if not ws_manager.is_online(user_id):
             asyncio.create_task(_update_user_status(user_id, "offline"))

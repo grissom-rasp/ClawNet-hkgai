@@ -1,6 +1,6 @@
 FROM node:22-bookworm@sha256:cd7bcd2e7a1e6f72052feb023c7f6b722205d3fcab7bbcbd2d1bfdab10b1e935
 
-# 修改 node 用户的 UID/GID 为 1001，匹配宿主机用户
+# 修改 node 用户的 UID/GID 为 1001，匹配宿主机用户 | EN: Modify the UID/GID of the node user to 1001 to match the host user
 ARG NODE_UID=1001
 ARG NODE_GID=1001
 RUN groupmod -g ${NODE_GID} node && \
@@ -27,16 +27,16 @@ RUN apt-get update && \
       qpdf \ 
       poppler-utils \
       libreoffice && \
-    # 为方便使用，提供 pip 命令别名
+    # 为方便使用，提供 pip 命令别名 | EN: For ease of use, pip command aliases are provided
     ln -sf /usr/bin/pip3 /usr/local/bin/pip && \
-    # 移除 PEP 668 限制，允许 pip 直接安装包（容器环境下安全）
+    # 移除 PEP 668 限制，允许 pip 直接安装包（容器环境下安全） | EN: Remove PEP 668 restrictions and allow pip to install packages directly (safe in container environment)
     rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED && \
-    # 给 node 用户 sudo 权限（无需密码）- 如需禁用，注释下面这行
+    # 给 node 用户 sudo 权限（无需密码）- 如需禁用，注释下面这行 | EN: Give the node user sudo permissions (no password required) - to disable, comment out the following line
     echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# 全局 npm 包安装（需要 root 权限）
+# 全局 npm 包安装（需要 root 权限） | EN: Global npm package installation (requires root permissions)
 RUN npm install -g docx pptxgenjs pdf-lib pdfjs-dist
 
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -45,16 +45,16 @@ COPY --chown=node:node patches ./patches
 COPY --chown=node:node scripts ./scripts
 
 USER node
-# 确保非 root 用户使用 pip 时默认安装到用户目录
+# 确保非 root 用户使用 pip 时默认安装到用户目录 | EN: Ensure that non-root users install to the user directory by default when using pip
 ENV PATH="/home/node/.local/bin:${PATH}"
 ENV PIP_USER=1
 
 RUN pnpm install --frozen-lockfile
 
-# 安装 uv/uvx（Python 包管理工具），安装到 ~/.local/bin（已在 PATH 中）
+# 安装 uv/uvx（Python 包管理工具），安装到 ~/.local/bin（已在 PATH 中） | EN: Install uv/uvx (Python package management tool) to ~/.local/bin (already in PATH)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 创建虚拟环境并安装 markitdown（包含所有可选依赖）
+# 创建虚拟环境并安装 markitdown（包含所有可选依赖） | EN: Create a virtual environment and install markitdown (including all optional dependencies)
 ENV VIRTUAL_ENV=/home/node/.venv
 RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -94,8 +94,8 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
-# 预安装 clawhub 包
-# clawhub 会将包安装到 /app/skills/ 目录，这是镜像的一部分，不会被 volume 覆盖
+# 预安装 clawhub 包 | EN: Pre-installed clawhub package
+# clawhub 会将包安装到 /app/skills/ 目录，这是镜像的一部分，不会被 volume 覆盖 | EN: clawhub will install the package to the /app/skills/ directory, which is part of the image and will not be overwritten by volume
 ARG OPENCLAW_CLAWHUB_PACKAGES=""
 COPY --chown=node:node clawhub-packages.txt* /tmp/
 USER node

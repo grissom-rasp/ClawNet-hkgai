@@ -62,7 +62,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — 禁止 credentials + wildcard origin 组合（浏览器本身也会拒绝）
+# CORS — 禁止 credentials + wildcard origin 组合（浏览器本身也会拒绝） | EN: CORS — disallows credentials + wildcard origin combination (will be rejected by the browser itself)
 _cors_origins = settings.CORS_ORIGINS
 _allow_credentials = "*" not in _cors_origins
 if not _allow_credentials:
@@ -99,13 +99,13 @@ app.include_router(admin_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # 仅在 DEBUG 模式下记录详细信息到日志（不泄露到 stdout/客户端）
+    # 仅在 DEBUG 模式下记录详细信息到日志（不泄露到 stdout/客户端） | EN: Log details to log only in DEBUG mode (does not leak to stdout/client)
     if settings.DEBUG:
         logger.debug(
             "Validation error on %s %s: %s",
             request.method, request.url.path, exc.errors(),
         )
-    # 向客户端返回字段级错误但不包含请求体内容
+    # 向客户端返回字段级错误但不包含请求体内容 | EN: Return field-level errors to the client but do not include the request body content
     sanitized = [
         {"loc": e.get("loc"), "msg": e.get("msg"), "type": e.get("type")}
         for e in exc.errors()

@@ -1,14 +1,14 @@
 """
-OpenClaw Gateway 连接池服务
+OpenClaw Gateway 连接池服务 / EN: OpenClaw Gateway connection pooling service
 
-为每个用户/Agent 维护独立的 WebSocket 连接到对应的 OpenClaw Gateway。
-支持：
-- 按需创建连接（首次发消息时）
-- 连接复用
-- 自动重连（指数退避）
-- 用户连接：空闲超时断开
-- Agent 连接：跟随 agent 生命周期（无空闲超时）
-- 重连期间消息缓冲
+为每个用户/Agent 维护独立的 WebSocket 连接到对应的 OpenClaw Gateway。 / EN: Maintain an independent WebSocket connection for each user/Agent to the corresponding OpenClaw Gateway.
+支持： / EN: support:
+- 按需创建连接（首次发消息时） / EN: - Create connections on demand (when sending a message for the first time)
+- 连接复用 / EN: - Connection reuse
+- 自动重连（指数退避） / EN: - Automatic reconnection (exponential backoff)
+- 用户连接：空闲超时断开 / EN: - User connection: Idle timeout disconnected
+- Agent 连接：跟随 agent 生命周期（无空闲超时） / EN: - Agent connections: follow agent lifecycle (no idle timeout)
+- 重连期间消息缓冲 / EN: - Message buffering during reconnection
 """
 
 import asyncio
@@ -298,9 +298,9 @@ async def _record_file_operation(
         logger.warning("Failed to record file operation audit: %s", e)
 
 
-# 用户连接空闲超时（秒）
-# 提高到 10 分钟，因为客户端每 25 秒发 ping 会刷新活跃时间，
-# 只有客户端真正离线时才会触发此超时。
+# 用户连接空闲超时（秒） | EN: User connection idle timeout (seconds)
+# 提高到 10 分钟，因为客户端每 25 秒发 ping 会刷新活跃时间， | EN: Increase it to 10 minutes because the client will refresh the active time every 25 seconds by sending a ping.
+# 只有客户端真正离线时才会触发此超时。 | EN: This timeout is only triggered when the client is truly offline.
 USER_IDLE_TIMEOUT = 600
 
 
@@ -366,10 +366,10 @@ class _RunContext:
     agent_id: str
     buffer: str = ""
     created_at: float = field(default_factory=lambda: asyncio.get_event_loop().time())
-    # Agent 对话相关
+    # Agent 对话相关 | EN: Agent dialogue related
     dialog_session_id: Optional[str] = None
     on_complete: Optional[Callable[[str, str, Optional[str]], None]] = None  # callback(run_id, final_text, streaming_message_id)
-    # 流式响应相关
+    # 流式响应相关 | EN: Streaming response related
     streaming_message_id: Optional[str] = None  # 流式消息的临时 ID
     stream_started: bool = False  # 是否已发送 stream_start
     last_stream_time: float = 0  # 上次发送流式更新的时间
@@ -386,13 +386,13 @@ class BufferedMessage:
 
 
 class GatewayConnection:
-    """OpenClaw Gateway 连接（支持用户和 Agent）
+    """OpenClaw Gateway 连接（支持用户和 Agent） / EN: """OpenClaw Gateway connection (supports users and agents)
     
-    重构自 UserGatewayConnection，新增：
-    - 连接类型区分（user/agent）
-    - Agent 连接无空闲超时
-    - 指数退避重连
-    - 重连期间消息缓冲
+    重构自 UserGatewayConnection，新增： / EN: Refactored from UserGatewayConnection, new:
+    - 连接类型区分（user/agent） / EN: - Connection type distinction (user/agent)
+    - Agent 连接无空闲超时 / EN: - No idle timeout for Agent connections
+    - 指数退避重连 / EN: - Exponential backoff reconnection
+    - 重连期间消息缓冲 / EN: - Message buffering during reconnection
     """
 
     def __init__(
@@ -415,18 +415,18 @@ class GatewayConnection:
         self._status = ConnectionStatus.DISCONNECTED
         self._reconnect_attempts = 0
 
-        # 请求和响应追踪
+        # 请求和响应追踪 | EN: Request and response tracking
         self._pending_responses: dict[str, asyncio.Future] = {}
         self._pending_chat_requests: dict[str, _RunContext] = {}
         self._runs: dict[str, _RunContext] = {}
-        # 当前连接希望接收 chat 事件的会话集合（用于 heartbeat proactive）
+        # 当前连接希望接收 chat 事件的会话集合（用于 heartbeat proactive） | EN: A collection of conversations that the current connection wants to receive chat events (for heartbeat proactive)
         self._subscribed_sessions: set[str] = set()
-        # node.event(chat.subscribe) 在 operator 角色下会被 gateway 拒绝，探测一次后禁用。
+        # node.event(chat.subscribe) 在 operator 角色下会被 gateway 拒绝，探测一次后禁用。 | EN: node.event(chat.subscribe) will be rejected by the gateway in the operator role and will be disabled after being detected once.
         self._node_event_supported = True
-        # 已注册的 proxy nodes（用于重连后自动重新注册）
+        # 已注册的 proxy nodes（用于重连后自动重新注册） | EN: Registered proxy nodes (used for automatic re-registration after reconnection)
         self._registered_proxy_nodes: dict[str, dict[str, Any]] = {}  # nodeId -> {commands, displayName, ...}
         
-        # 消息缓冲（重连期间）
+        # 消息缓冲（重连期间） | EN: Message buffering (during reconnection)
         self._message_buffer: deque[BufferedMessage] = deque(
             maxlen=settings.AGENT_DIALOG_MESSAGE_BUFFER_SIZE
         )
@@ -522,7 +522,7 @@ class GatewayConnection:
                 
                 await self._connect_and_listen()
                 
-                # 连接成功，重置重连计数
+                # 连接成功，重置重连计数 | EN: Connection successful, reset reconnection count
                 backoff = 1.0
                 self._reconnect_attempts = 0
                 
@@ -539,14 +539,14 @@ class GatewayConnection:
                     f"attempt {self._reconnect_attempts}/{max_attempts}"
                 )
                 
-                # Agent 连接：超过重连次数上限则走下线流程
+                # Agent 连接：超过重连次数上限则走下线流程 | EN: Agent connection: If the upper limit of reconnection times is exceeded, the process will be taken offline.
                 if self.is_agent_connection and self._reconnect_attempts >= max_attempts:
                     logger.error(
                         f"{self._log_prefix()} Max reconnect attempts reached, "
                         "marking agent as offline"
                     )
                     self._status = ConnectionStatus.DISCONNECTED
-                    # 通知调用方（通过回调或事件）
+                    # 通知调用方（通过回调或事件） | EN: Notify the caller (via callback or event)
                     break
                 
                 await asyncio.sleep(backoff)
@@ -572,13 +572,13 @@ class GatewayConnection:
             self.touch()
             logger.info(f"{self._log_prefix()} Gateway connected and handshake OK.")
 
-            # 重连后先恢复 chat 订阅，避免 proactive 消息丢失。
+            # 重连后先恢复 chat 订阅，避免 proactive 消息丢失。 | EN: After reconnecting, restore the chat subscription first to avoid loss of proactive messages.
             await self._resubscribe_chat_sessions()
 
-            # 重连后重新注册 proxy nodes
+            # 重连后重新注册 proxy nodes | EN: Re-register proxy nodes after reconnecting
             await self._reregister_proxy_nodes()
 
-            # 重连后发送缓冲的消息
+            # 重连后发送缓冲的消息 | EN: Send buffered messages after reconnection
             await self._flush_message_buffer()
 
             while not self._stop_event.is_set():
@@ -654,7 +654,7 @@ class GatewayConnection:
                 fut = self._pending_responses.pop(req_id, None)
                 if fut and not fut.done():
                     fut.set_result(msg)
-                # chat.send ack 返回 runId，绑定请求上下文
+                # chat.send ack 返回 runId，绑定请求上下文 | EN: chat.send ack returns runId and binds the request context
                 payload = msg.get("payload") or {}
                 run_id = payload.get("runId")
                 if isinstance(run_id, str):
@@ -669,7 +669,7 @@ class GatewayConnection:
         event = msg.get("event")
         payload = msg.get("payload") or {}
 
-        # 聚合 agent 事件中的助手流式输出
+        # 聚合 agent 事件中的助手流式输出 | EN: Helper streaming output in aggregate agent events
         if event == "agent":
             run_id = payload.get("runId")
             stream = payload.get("stream")
@@ -681,7 +681,7 @@ class GatewayConnection:
                     if ctx:
                         old_buffer = ctx.buffer
                         ctx.buffer += delta
-                        # 流式广播（根据场景判断是否启用）
+                        # 流式广播（根据场景判断是否启用） | EN: Streaming broadcast (depending on the scenario to determine whether to enable it)
                         if self._should_stream(ctx):
                             await self._broadcast_stream_delta(ctx, run_id, delta, old_buffer)
             if isinstance(run_id, str) and stream == "lifecycle" and isinstance(data, dict):
@@ -689,7 +689,7 @@ class GatewayConnection:
                     await self._finalize_run(run_id)
             return
 
-        # chat 事件是最终状态的权威来源
+        # chat 事件是最终状态的权威来源 | EN: chat events are the authoritative source of final state
         if event == "chat":
             run_id = payload.get("runId")
             if not isinstance(run_id, str):
@@ -730,7 +730,7 @@ class GatewayConnection:
                 if len(text) > len(ctx.buffer):
                     old_buffer = ctx.buffer
                     ctx.buffer = text
-                    # 流式广播
+                    # 流式广播 | EN: streaming radio
                     if self._should_stream(ctx):
                         delta_text = text[len(old_buffer):]
                         if delta_text:
@@ -965,11 +965,11 @@ class GatewayConnection:
         }
 
     def _should_stream(self, ctx: _RunContext) -> bool:
-        """判断是否应该启用流式输出
+        """判断是否应该启用流式输出 / EN: """Determine whether streaming output should be enabled
         
-        根据配置和场景类型决定：
-        - 用户与 Agent 对话：由 ENABLE_STREAMING_USER_CHAT 控制
-        - Agent 与 Agent 对话：由 ENABLE_STREAMING_AGENT_DIALOG 控制
+        根据配置和场景类型决定： / EN: Depends on configuration and scenario type:
+        - 用户与 Agent 对话：由 ENABLE_STREAMING_USER_CHAT 控制 / EN: - User-Agent dialogue: controlled by ENABLE_STREAMING_USER_CHAT
+        - Agent 与 Agent 对话：由 ENABLE_STREAMING_AGENT_DIALOG 控制 / EN: - Agent to Agent dialogue: controlled by ENABLE_STREAMING_AGENT_DIALOG
         """
         is_agent_dialog = ctx.on_complete is not None or ctx.dialog_session_id is not None
         if is_agent_dialog:
@@ -977,14 +977,14 @@ class GatewayConnection:
         else:
             return settings.ENABLE_STREAMING_USER_CHAT
 
-    # 用于检测原始 buffer 中是否存在未闭合的特殊标记（悬挂检测）
-    # 两层防线：
-    #   1. _SUSPECT_RAW_PATTERN: 扫描原始 buffer，检测未闭合的 << 或 [ 标记
-    #   2. _SUSPECT_TAIL_PATTERN: 扫描 clean_buffer 末尾，检测残留碎片
+    # 用于检测原始 buffer 中是否存在未闭合的特殊标记（悬挂检测） | EN: Used to detect whether there is an unclosed special mark in the original buffer (dangling detection)
+    # 两层防线： | EN: Two layers of defense:
+    #   1. _SUSPECT_RAW_PATTERN: 扫描原始 buffer，检测未闭合的 << 或 [ 标记 | EN: 1. _SUSPECT_RAW_PATTERN: Scan the original buffer and detect unclosed << or [ tags
+    #   2. _SUSPECT_TAIL_PATTERN: 扫描 clean_buffer 末尾，检测残留碎片 | EN: 2. _SUSPECT_TAIL_PATTERN: Scan the end of clean_buffer to detect residual fragments
     import re as _re
     
-    # 检测原始 buffer 中未闭合的特殊标记（任意位置）
-    # 匹配 "<<" 开始但没有对应 ">>" 闭合的片段
+    # 检测原始 buffer 中未闭合的特殊标记（任意位置） | EN: Detect unclosed special markers (any position) in the original buffer
+    # 匹配 "<<" 开始但没有对应 ">>" 闭合的片段 | EN: Matches fragments starting with "<<" but not ending with ">>"
     _SUSPECT_RAW_PATTERN = _re.compile(
         r'<<(?:NEED_AGENT_DIALOG|[A-Z_]+)[^>]*$'  # << 开头的标记未闭合（到文本末尾都没有 >>）
         r'|'
@@ -994,7 +994,7 @@ class GatewayConnection:
         _re.DOTALL
     )
     
-    # clean_buffer 末尾的碎片检测（_clean_agent_response 可能残留部分字符）
+    # clean_buffer 末尾的碎片检测（_clean_agent_response 可能残留部分字符） | EN: Fragmentation detection at the end of clean_buffer (_clean_agent_response may have some remaining characters)
     _SUSPECT_TAIL_PATTERN = _re.compile(
         r'(?:'
         r'<{1,2}(?:/?(?:antml:)?(?:function_calls|invoke|parameter|tool_use|tool_result|NEED_AGENT_DIALOG)[^>]*)?'  # XML/<< 标记
@@ -1012,53 +1012,53 @@ class GatewayConnection:
         delta: str,
         old_buffer: str,
     ):
-        """广播流式增量更新到前端
+        """广播流式增量更新到前端 / EN: """Broadcast streaming incremental updates to the front end
         
-        核心策略（三层防线）：
-        1. 检测原始 buffer 中是否有未闭合的特殊标记 → 有则暂缓整个广播
-        2. 清洗已累积的完整文本，过滤掉已闭合的特殊标记
-        3. 检测 clean_buffer 末尾是否有残留碎片 → 有则截断到安全位置
+        核心策略（三层防线）： / EN: Core strategy (three lines of defense):
+        1. 检测原始 buffer 中是否有未闭合的特殊标记 → 有则暂缓整个广播 / EN: 1. Check whether there is an unclosed special mark in the original buffer → if so, suspend the entire broadcast
+        2. 清洗已累积的完整文本，过滤掉已闭合的特殊标记 / EN: 2. Clean the accumulated complete text and filter out the closed special tags
+        3. 检测 clean_buffer 末尾是否有残留碎片 → 有则截断到安全位置 / EN: 3. Check whether there are residual fragments at the end of clean_buffer → if so, truncate them to a safe location
         """
         import time
         from src.services.agent_dialog_service import _clean_agent_response
         
-        # 节流：避免过于频繁的广播
+        # 节流：避免过于频繁的广播 | EN: Throttle: avoid broadcasting too frequently
         current_time = time.time() * 1000  # 毫秒
         if current_time - ctx.last_stream_time < settings.STREAMING_CHUNK_INTERVAL_MS:
             return
         ctx.last_stream_time = current_time
         
-        # 第一层防线：检测原始 buffer 中是否有未闭合的特殊标记
-        # 这是最关键的检测——在清洗之前拦截，避免半成品标记泄漏
+        # 第一层防线：检测原始 buffer 中是否有未闭合的特殊标记 | EN: The first line of defense: detect whether there are unclosed special marks in the original buffer
+        # 这是最关键的检测——在清洗之前拦截，避免半成品标记泄漏 | EN: This is the most critical detection - intercept before cleaning to avoid leakage of semi-finished product marks
         raw_suspect = self._SUSPECT_RAW_PATTERN.search(ctx.buffer)
         if raw_suspect:
-            # 原始 buffer 中有未闭合标记，暂缓广播
-            # 但仍然可以广播标记出现之前的安全部分
+            # 原始 buffer 中有未闭合标记，暂缓广播 | EN: There is an unclosed mark in the original buffer, so the broadcast is suspended.
+            # 但仍然可以广播标记出现之前的安全部分 | EN: But it is still possible to broadcast the safe part before the mark appears
             safe_raw = ctx.buffer[:raw_suspect.start()]
             if not safe_raw.strip():
-                # 标记在 buffer 开头或之前没有可用内容，暂不广播
+                # 标记在 buffer 开头或之前没有可用内容，暂不广播 | EN: The mark has no available content at or before the beginning of the buffer and will not be broadcast for the time being.
                 return
-            # 只清洗标记之前的部分
+            # 只清洗标记之前的部分 | EN: Only clean the part before the mark
             clean_buffer = _clean_agent_response(safe_raw)
         else:
-            # 没有未闭合标记，清洗整个 buffer
+            # 没有未闭合标记，清洗整个 buffer | EN: There is no unclosed mark, clean the entire buffer
             clean_buffer = _clean_agent_response(ctx.buffer)
         
         if not clean_buffer:
             return
         
-        # 第二层防线：检测 clean_buffer 末尾是否有残留碎片
-        # 例如 _clean_agent_response 可能保留了部分未识别的标记碎片
+        # 第二层防线：检测 clean_buffer 末尾是否有残留碎片 | EN: The second line of defense: detect whether there are residual fragments at the end of clean_buffer
+        # 例如 _clean_agent_response 可能保留了部分未识别的标记碎片 | EN: For example _clean_agent_response may retain some unrecognized token fragments
         safe_buffer = clean_buffer
         suspect_match = self._SUSPECT_TAIL_PATTERN.search(clean_buffer)
         if suspect_match:
-            # 找到了可疑的尾部，只广播到可疑部分之前
+            # 找到了可疑的尾部，只广播到可疑部分之前 | EN: The suspicious tail is found and only broadcast before the suspicious part
             safe_buffer = clean_buffer[:suspect_match.start()]
             if not safe_buffer:
-                # 整段内容都是可疑的，暂不广播
+                # 整段内容都是可疑的，暂不广播 | EN: The entire content is suspicious and will not be broadcast for the time being.
                 return
         
-        # 与上次广播内容比较
+        # 与上次广播内容比较 | EN: Compare with last broadcast content
         if safe_buffer == ctx.last_clean_buffer:
             return
         
@@ -1073,7 +1073,7 @@ class GatewayConnection:
         if ctx.on_complete:
             return
 
-        # 如果还没开始流式，先发送 stream_start
+        # 如果还没开始流式，先发送 stream_start | EN: If streaming has not started yet, send stream_start first
         if not ctx.stream_started:
             ctx.stream_started = True
             ctx.streaming_message_id = f"stream-{run_id}"
@@ -1087,7 +1087,7 @@ class GatewayConnection:
                 sender=sender,
             )
         
-        # 发送安全的增量更新
+        # 发送安全的增量更新 | EN: Send safe incremental updates
         await ws_manager.send_message_stream_delta(
             participant_ids=ctx.participant_ids,
             message_id=ctx.streaming_message_id,
@@ -1128,7 +1128,7 @@ class GatewayConnection:
             return
         final_text = (ctx.buffer or "").strip()
         if not final_text:
-            # 如果启用了流式但没有内容，发送流式结束
+            # 如果启用了流式但没有内容，发送流式结束 | EN: If streaming is enabled but there is no content, send end of streaming
             if ctx.stream_started:
                 await ws_manager.send_message_stream_end(
                     participant_ids=ctx.participant_ids,
@@ -1140,7 +1140,7 @@ class GatewayConnection:
 
         print(f"[OPENCLAW]{self._log_prefix()} Finalizing run: {run_id}", flush=True)
 
-        # 如果有回调（Agent 对话场景），调用回调而不是保存消息
+        # 如果有回调（Agent 对话场景），调用回调而不是保存消息 | EN: If there is a callback (Agent dialogue scenario), call the callback instead of saving the message
         # Note: A2A streaming is disabled in _handle_stream_delta (ctx.on_complete check),
         # so ctx.stream_started should always be False here. This block is kept for safety.
         if ctx.on_complete:
@@ -1158,16 +1158,16 @@ class GatewayConnection:
                 logger.error(f"{self._log_prefix()} on_complete callback error: {e}")
             return
 
-        # 保留原始文本用于意图检测（包含 <<NEED_AGENT_DIALOG:...>> 等标记）
+        # 保留原始文本用于意图检测（包含 <<NEED_AGENT_DIALOG:...>> 等标记） | EN: Keep the original text for intent detection (contain tags such as <<NEED_AGENT_DIALOG:...>>)
         raw_text = final_text
         
-        # 清洗 Agent 回复中的 LLM 杂质（用于保存和展示）
+        # 清洗 Agent 回复中的 LLM 杂质（用于保存和展示） | EN: Clean LLM impurities in Agent replies (for saving and display)
         from src.services.agent_dialog_service import _clean_agent_response
         final_text = _clean_agent_response(final_text)
         if not final_text:
             return
 
-        # 用户消息场景：保存并广播
+        # 用户消息场景：保存并广播 | EN: User message scenario: save and broadcast
         async with async_session() as db:
             try:
                 msg = await save_message(
@@ -1184,14 +1184,14 @@ class GatewayConnection:
                 await db.commit()
                 print(f"[OPENCLAW]{self._log_prefix()} Message saved: {msg.id}", flush=True)
                 
-                # 意图检测：使用原始文本（包含标记），检查是否需要发起 Agent 间对话
+                # 意图检测：使用原始文本（包含标记），检查是否需要发起 Agent 间对话 | EN: Intent detection: Use the original text (including tags) to check whether it is necessary to initiate a dialogue between agents
                 await self._check_dialog_intent(db, ctx, raw_text, msg)
                 
-                # 提交意图检测中可能产生的数据库操作
-                # （如创建 A2A 对话会话、更新 msg.content 清除标记等）
+                # 提交意图检测中可能产生的数据库操作 | EN: Database operations that may occur during submission intent detection
+                # （如创建 A2A 对话会话、更新 msg.content 清除标记等） | EN: (such as creating A2A conversation sessions, updating msg.content clear tags, etc.)
                 await db.commit()
                 
-                # 如果启用了流式，发送流式结束事件（带真实消息ID）
+                # 如果启用了流式，发送流式结束事件（带真实消息ID） | EN: If streaming is enabled, send streaming end event (with real message ID)
                 if ctx.stream_started:
                     await ws_manager.send_message_stream_end(
                         participant_ids=ctx.participant_ids,
@@ -1199,7 +1199,7 @@ class GatewayConnection:
                         conversation_id=ctx.conversation_id,
                         final_text=final_text,
                     )
-                    # 流式模式下，前端已经显示了内容，发送 message.new 用于持久化和状态更新
+                    # 流式模式下，前端已经显示了内容，发送 message.new 用于持久化和状态更新 | EN: In streaming mode, the front end has displayed the content and sends message.new for persistence and status update.
                     broadcast_data = {
                         "type": "message.new",
                         "data": {
@@ -1214,7 +1214,7 @@ class GatewayConnection:
                         },
                     }
                 else:
-                    # 非流式模式，正常广播
+                    # 非流式模式，正常广播 | EN: Non-streaming mode, normal broadcast
                     broadcast_data = {
                         "type": "message.new",
                         "data": {
@@ -1299,10 +1299,10 @@ class GatewayConnection:
                 print(f"[SUMMARY] No trigger needed", flush=True)
 
     async def _check_dialog_intent(self, db, ctx: "_RunContext", text: str, msg):
-        """检查 Agent 回复中是否有与其他 Agent 对话的意图
+        """检查 Agent 回复中是否有与其他 Agent 对话的意图 / EN: """Check whether the Agent's reply contains the intention to talk to other Agents
 
-        支持单标记和多标记。
-        检测到意图后，先请求发起方用户授权，而非直接发起 A2A 对话。
+        支持单标记和多标记。 / EN: Supports single and multiple tags.
+        检测到意图后，先请求发起方用户授权，而非直接发起 A2A 对话。 / EN: After detecting the intent, first request authorization from the initiating user instead of directly initiating an A2A conversation.
         """
         try:
             from src.services.intent_parser import extract_dialog_intents
@@ -1310,7 +1310,7 @@ class GatewayConnection:
             from src.models.user import User
             from sqlalchemy import select
 
-            # 解析所有标记
+            # 解析所有标记 | EN: Parse all tags
             cleaned_text, intents = extract_dialog_intents(text)
 
             if not intents:
@@ -1321,19 +1321,19 @@ class GatewayConnection:
                 f"{len(intents)} target(s)"
             )
 
-            # 获取当前 Agent 信息
+            # 获取当前 Agent 信息 | EN: Get current Agent information
             agent = await db.get(Agent, uuid.UUID(ctx.agent_id))
             if not agent:
                 return
 
-            # 检查是否已有关联的运行中 DiscoveryTask（链式发现追加查询）
+            # 检查是否已有关联的运行中 DiscoveryTask（链式发现追加查询） | EN: Check if there is already an associated running DiscoveryTask (chained discovery append query)
             from src.services.discovery_service import discovery_orchestrator
             existing_task = await discovery_orchestrator.get_task_by_conversation(
                 db, uuid.UUID(ctx.conversation_id)
             )
 
             if existing_task and existing_task.status in ("running", "completing"):
-                # 链式发现：追加新查询到现有任务（不需要再次授权）
+                # 链式发现：追加新查询到现有任务（不需要再次授权） | EN: Chained discovery: Append new queries to existing tasks (no need to authorize again)
                 new_queries = [
                     {"target_owner": i.target_owner, "topic": i.topic}
                     for i in intents
@@ -1871,11 +1871,11 @@ class GatewayConnection:
         session_key: str,
         run_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        """发送 chat.abort 到 Gateway，中止指定会话（或特定 run）的生成
+        """发送 chat.abort 到 Gateway，中止指定会话（或特定 run）的生成 / EN: """Send chat.abort to Gateway to abort the generation of the specified session (or specific run)
 
         Args:
-            session_key: OpenClaw 会话 key
-            run_id: 如果指定，只中止该 run；否则中止该 session_key 下所有 run
+            session_key: OpenClaw 会话 key / EN: session_key: OpenClaw session key
+            run_id: 如果指定，只中止该 run；否则中止该 session_key 下所有 run / EN: run_id: If specified, only this run will be aborted; otherwise, all runs under this session_key will be aborted.
 
         Returns:
             Gateway 的响应 payload，例如 {"ok": true, "aborted": true, "runIds": [...]}
@@ -2162,24 +2162,24 @@ class GatewayConnection:
         tag_id: Optional[str] = None,
         a2a_mode: bool = False,
     ):
-        """发送聊天消息
+        """发送聊天消息 / EN: """Send chat message
 
         Args:
-            conversation_id: 会话 ID
-            user_id: 用户 ID
-            participant_ids: 参与者 ID 列表
+            conversation_id: 会话 ID / EN: conversation_id: conversation ID
+            user_id: 用户 ID / EN: user_id: user ID
+            participant_ids: 参与者 ID 列表 / EN: participant_ids: list of participant IDs
             agent_id: Agent ID
-            session_key: OpenClaw 会话 key
-            message: 消息内容
-            idempotency_key: 幂等性 key
-            dialog_session_id: Agent 对话会话 ID（可选，用于 agent-to-agent）
+            session_key: OpenClaw 会话 key / EN: session_key: OpenClaw session key
+            message: 消息内容 / EN: message: message content
+            idempotency_key: 幂等性 key / EN: idempotency_key: idempotency key
+            dialog_session_id: Agent 对话会话 ID（可选，用于 agent-to-agent） / EN: dialog_session_id: Agent dialog session ID (optional, for agent-to-agent)
             on_complete: 完成回调（可选，用于 agent-to-agent），签名 (run_id, text, streaming_message_id)
-            timeout_ms: 运行超时时间（毫秒），传递给 Gateway 控制单次 run 超时
-            tag_id: 直接指定 tag ID（用于 A2A，跳过 conversation-based 解析）
-            a2a_mode: 是否为 A2A 对话模式（对方 agent 发起的请求），启用更严格的安全限制
+            timeout_ms: 运行超时时间（毫秒），传递给 Gateway 控制单次 run 超时 / EN: timeout_ms: Run timeout (milliseconds), passed to Gateway to control single run timeout
+            tag_id: 直接指定 tag ID（用于 A2A，跳过 conversation-based 解析） / EN: tag_id: directly specify the tag ID (for A2A, skip conversation-based parsing)
+            a2a_mode: 是否为 A2A 对话模式（对方 agent 发起的请求），启用更严格的安全限制 / EN: a2a_mode: Whether it is A2A dialogue mode (request initiated by the other party's agent), enabling stricter security restrictions
         """
         self.touch()
-        # 先订阅 chat 事件，否则 heartbeat proactive 可能因"无订阅者"被 gateway 丢弃。
+        # 先订阅 chat 事件，否则 heartbeat proactive 可能因"无订阅者"被 gateway 丢弃。 | EN: Subscribe to the chat event first, otherwise heartbeat proactive may be discarded by the gateway due to "no subscribers".
         await self.ensure_chat_subscription(session_key)
 
         # Set tag context on the gateway so it loads the correct workspace for this session.
@@ -2218,7 +2218,7 @@ class GatewayConnection:
             on_complete=on_complete,
         )
 
-        # 如果连接中或重连中，缓冲消息
+        # 如果连接中或重连中，缓冲消息 | EN: If connecting or reconnecting, buffer messages
         if not self.connected or self._ws is None:
             if self._status == ConnectionStatus.RECONNECTING:
                 logger.info(f"{self._log_prefix()} Buffering message during reconnect")
@@ -2231,19 +2231,19 @@ class GatewayConnection:
         try:
             await self._send_request(request, context)
         except Exception as e:
-            # 发送失败，如果是 Agent 连接则缓冲
+            # 发送失败，如果是 Agent 连接则缓冲 | EN: Failed to send, if it is an Agent connection, it will be buffered.
             if self.is_agent_connection:
                 logger.info(f"{self._log_prefix()} Buffering message after send failure: {e}")
                 self._message_buffer.append(BufferedMessage(request=request, context=context))
 
 
-# ============ 连接池 ============
+# ============ 连接池 ============ | EN: ============ Connection pool ============
 
 class OpenClawConnectionPool:
-    """OpenClaw Gateway 连接池
+    """OpenClaw Gateway 连接池 / EN: """OpenClaw Gateway connection pool
 
-    为每个用户维护独立的 WebSocket 连接。
-    Agent 连接由 AgentConnectionManager 单独管理。
+    为每个用户维护独立的 WebSocket 连接。 / EN: Maintain separate WebSocket connections for each user.
+    Agent 连接由 AgentConnectionManager 单独管理。 / EN: Agent connections are managed individually by AgentConnectionManager.
     """
 
     def __init__(self):
@@ -2281,7 +2281,7 @@ class OpenClawConnectionPool:
                 async with self._lock:
                     to_remove = []
                     for user_id, conn in self._connections.items():
-                        # 只清理用户连接
+                        # 只清理用户连接 | EN: Only clear user connections
                         if not conn.is_agent_connection and conn.idle_seconds > USER_IDLE_TIMEOUT:
                             to_remove.append(user_id)
 
@@ -2297,29 +2297,29 @@ class OpenClawConnectionPool:
     async def get_connection(self, user_id: str) -> Optional[GatewayConnection]:
         """获取用户的 Gateway 连接，如果不存在则创建"""
         async with self._lock:
-            # 检查现有连接
+            # 检查现有连接 | EN: Check existing connections
             if user_id in self._connections:
                 conn = self._connections[user_id]
                 conn.touch()
                 return conn
 
-            # 获取用户的 Gateway 配置
+            # 获取用户的 Gateway 配置 | EN: Get the user's Gateway configuration
             config = get_gateway_config(user_id)
             if not config:
                 logger.warning(f"[User:{user_id[:8]}] No gateway config found")
                 return None
 
-            # 创建新连接
+            # 创建新连接 | EN: Create new connection
             conn = GatewayConnection(user_id, config, ConnectionType.USER)
             self._connections[user_id] = conn
             conn.start()
 
-            # 等待连接建立
+            # 等待连接建立 | EN: Wait for connection to be established
             try:
                 await asyncio.wait_for(conn._connected.wait(), timeout=10)
             except asyncio.TimeoutError:
                 logger.warning(f"[User:{user_id[:8]}] Connection timeout")
-                # 保留连接，后台会继续重连
+                # 保留连接，后台会继续重连 | EN: Keep the connection and continue to reconnect in the background
 
             return conn
 
@@ -2341,15 +2341,15 @@ class OpenClawConnectionPool:
         }
 
 
-# ============ Agent 连接管理器 ============
+# ============ Agent 连接管理器 ============ | EN: ============ Agent Connection Manager ============
 
 class AgentConnectionManager:
-    """Agent Gateway 连接管理器
+    """Agent Gateway 连接管理器 / EN: """Agent Gateway Connection Manager
     
-    专门管理 Agent 的持久连接，生命周期跟随 Agent status：
-    - Agent online → 建连
-    - Agent offline → 断连
-    - 无空闲超时
+    专门管理 Agent 的持久连接，生命周期跟随 Agent status： / EN: Specially manages Agent's persistent connections, and the life cycle follows Agent status:
+    - Agent online → 建连 / EN: - Agent online → establish connection
+    - Agent offline → 断连 / EN: - Agent offline → disconnect
+    - 无空闲超时 / EN: - No idle timeout
     """
 
     def __init__(self):
@@ -2357,25 +2357,25 @@ class AgentConnectionManager:
         self._lock = asyncio.Lock()
 
     async def connect_agent(self, agent_id: str, config: GatewayConfig) -> Optional[GatewayConnection]:
-        """建立 Agent 的 Gateway 连接
+        """建立 Agent 的 Gateway 连接 / EN: """Establish the Agent's Gateway connection
         
-        在 Agent 上线时调用。
+        在 Agent 上线时调用。 / EN: Called when the Agent comes online.
         """
         async with self._lock:
-            # 检查是否已有连接
+            # 检查是否已有连接 | EN: Check if there is a connection
             if agent_id in self._connections:
                 conn = self._connections[agent_id]
                 if conn.connected:
                     return conn
-                # 已有但未连接，停止旧连接
+                # 已有但未连接，停止旧连接 | EN: Existing but not connected, stop old connection
                 await conn.stop()
 
-            # 创建新连接
+            # 创建新连接 | EN: Create new connection
             conn = GatewayConnection(agent_id, config, ConnectionType.AGENT)
             self._connections[agent_id] = conn
             conn.start()
 
-            # 等待连接建立
+            # 等待连接建立 | EN: Wait for connection to be established
             try:
                 await asyncio.wait_for(conn._connected.wait(), timeout=10)
                 logger.info(f"[Agent:{agent_id[:8]}] Connected to OpenClaw Gateway")
@@ -2385,9 +2385,9 @@ class AgentConnectionManager:
                 return conn
 
     async def disconnect_agent(self, agent_id: str) -> None:
-        """断开 Agent 的 Gateway 连接
+        """断开 Agent 的 Gateway 连接 / EN: """Disconnect the Agent's Gateway connection
         
-        在 Agent 下线时调用。
+        在 Agent 下线时调用。 / EN: Called when the Agent goes offline.
         """
         async with self._lock:
             conn = self._connections.pop(agent_id, None)
@@ -2413,9 +2413,9 @@ class AgentConnectionManager:
         logger.info("Agent connection manager stopped")
 
     def has_active_dialog_run(self, session_id: str, agent_ids: list[str]) -> bool:
-        """检查指定 dialog session 的任意 agent 是否有正在进行的 Gateway run
+        """检查指定 dialog session 的任意 agent 是否有正在进行的 Gateway run / EN: """Check whether any agent in the specified dialog session has an ongoing Gateway run
 
-        供 session_cleanup 在终止前调用，防止误杀正在执行的 agent run。
+        供 session_cleanup 在终止前调用，防止误杀正在执行的 agent run。 / EN: For session_cleanup to be called before termination to prevent accidental killing of the executing agent run.
         """
         for agent_id in agent_ids:
             conn = self._connections.get(agent_id)
@@ -2443,19 +2443,19 @@ class AgentConnectionManager:
         }
 
 
-# 全局连接池实例
+# 全局连接池实例 | EN: Global connection pool instance
 openclaw_pool = OpenClawConnectionPool()
 
-# 全局 Agent 连接管理器实例
+# 全局 Agent 连接管理器实例 | EN: Global Agent Connection Manager Instance
 agent_connection_manager = AgentConnectionManager()
 
 
-# ============ 兼容旧 API 的包装器 ============
+# ============ 兼容旧 API 的包装器 ============ | EN: ============ Wrapper compatible with old API ============
 
 class OpenClawService:
-    """向后兼容的 OpenClaw 服务接口
+    """向后兼容的 OpenClaw 服务接口 / EN: """Backwards compatible OpenClaw service interface
 
-    实际委托给连接池处理。
+    实际委托给连接池处理。 / EN: The actual processing is delegated to the connection pool.
     """
 
     def __init__(self):
@@ -2494,9 +2494,9 @@ class OpenClawService:
         message: str,
         idempotency_key: str,
     ):
-        """发送聊天消息
+        """发送聊天消息 / EN: """Send chat message
 
-        根据 user_id 获取对应的 Gateway 连接并发送。
+        根据 user_id 获取对应的 Gateway 连接并发送。 / EN: Obtain the corresponding Gateway connection based on user_id and send it.
         """
         conn = await openclaw_pool.get_connection(user_id)
         if not conn:
@@ -2544,9 +2544,9 @@ class OpenClawService:
         session_key: str,
         run_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        """中止聊天生成
+        """中止聊天生成 / EN: """Abort chat generation
 
-        根据 user_id 获取对应的 Gateway 连接并发送 chat.abort。
+        根据 user_id 获取对应的 Gateway 连接并发送 chat.abort。 / EN: Get the corresponding Gateway connection based on user_id and send chat.abort.
         """
         conn = await openclaw_pool.get_connection(user_id)
         if not conn or not conn.connected:
@@ -2617,9 +2617,9 @@ class OpenClawService:
             await conn.ensure_chat_subscription(key)
 
 
-# 全局服务实例（兼容旧代码）
+# 全局服务实例（兼容旧代码） | EN: Global service instance (compatible with old code)
 openclaw_service = OpenClawService()
 
 
-# 保持向后兼容的别名
+# 保持向后兼容的别名 | EN: Maintaining backward-compatible aliases
 UserGatewayConnection = GatewayConnection

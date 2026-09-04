@@ -33,7 +33,7 @@ BEGIN
     FOR i IN 1000..9999 LOOP
         is_reserved := false;
 
-        -- Repeating (豹子号): 1111,2222,...,9999
+        -- Repeating (豹子号): 1111,2222,...,9999 | EN: Repeating (Leopard Number): 1111,2222,...,9999
         IF i % 1111 = 0 AND i >= 1111 THEN
             is_reserved := true;
         END IF;

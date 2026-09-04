@@ -1,5 +1,5 @@
 """
-Admin API — 用户管理 + Gateway 容器生命周期。
+Admin API — 用户管理 + Gateway 容器生命周期。 / EN: Admin API — User management + Gateway container lifecycle.
 
 认证方式: Admin JWT (role=admin 的用户登录后获取)。
 危险操作 (stop/delete) 需要二次密码确认。

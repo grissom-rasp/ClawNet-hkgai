@@ -1,7 +1,7 @@
 """
 Session Cleanup Task
 
-定时任务：检测并处理超时的 Agent 对话会话。
+定时任务：检测并处理超时的 Agent 对话会话。 / EN: Scheduled tasks: Detect and handle timed-out Agent conversation sessions.
 """
 
 import asyncio
@@ -29,18 +29,18 @@ SYSTEM_SENDER_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
 
 
 class SessionCleanupTask:
-    """Agent 对话会话清理定时任务
+    """Agent 对话会话清理定时任务 / EN: """Agent dialogue session cleaning scheduled task
     
-    功能：
-    1. 检测超时的活跃会话
-    2. 检测长时间等待授权的会话
-    3. 清理已完成/终止的会话的内存状态
+    功能： / EN: Function:
+    1. 检测超时的活跃会话 / EN: 1. Detecting active sessions that have timed out
+    2. 检测长时间等待授权的会话 / EN: 2. Detect sessions that are waiting for a long time for authorization
+    3. 清理已完成/终止的会话的内存状态 / EN: 3. Clean up memory status of completed/terminated sessions
     """
 
     def __init__(self, check_interval: int = 60):
         """
         Args:
-            check_interval: 检查间隔（秒），默认 60 秒
+            check_interval: 检查间隔（秒），默认 60 秒 / EN: check_interval: check interval (seconds), default 60 seconds
         """
         self.check_interval = check_interval
         self._task: asyncio.Task | None = None
@@ -81,17 +81,17 @@ class SessionCleanupTask:
         async with async_session() as db:
             now = datetime.now(timezone.utc)
             
-            # 1. 检查活跃会话的空闲超时
+            # 1. 检查活跃会话的空闲超时 | EN: 1. Check the idle timeout of active sessions
             await self._check_active_session_timeouts(db, now)
             
-            # 2. 检查等待授权的会话（超过 24 小时未响应）
+            # 2. 检查等待授权的会话（超过 24 小时未响应） | EN: 2. Check for sessions waiting for authorization (no response for more than 24 hours)
             await self._check_pending_session_timeouts(db, now)
             
             await db.commit()
 
     async def _check_active_session_timeouts(self, db, now: datetime):
         """检查活跃会话的空闲超时"""
-        # 获取所有活跃会话
+        # 获取所有活跃会话 | EN: Get all active sessions
         result = await db.execute(
             select(AgentDialogSession).where(
                 AgentDialogSession.status == DialogSessionStatus.ACTIVE.value
@@ -103,7 +103,7 @@ class SessionCleanupTask:
             if not session.last_message_at:
                 continue
             
-            # 二次检查：刷新会话状态，防止竞态条件导致的重复终止
+            # 二次检查：刷新会话状态，防止竞态条件导致的重复终止 | EN: Secondary check: Refresh session status to prevent repeated terminations caused by race conditions
             await db.refresh(session)
             if session.status != DialogSessionStatus.ACTIVE.value:
                 logger.debug(
@@ -114,8 +114,8 @@ class SessionCleanupTask:
             
             idle_seconds = (now - session.last_message_at).total_seconds()
             if idle_seconds > session.idle_timeout_seconds:
-                # Layer 2 防护：检查 Agent 是否有活跃的 Gateway run
-                # 防止 cleanup 在 agent 正在处理（思考/工具/流式输出）时误杀会话
+                # Layer 2 防护：检查 Agent 是否有活跃的 Gateway run | EN: Layer 2 protection: Check if the Agent has an active Gateway run
+                # 防止 cleanup 在 agent 正在处理（思考/工具/流式输出）时误杀会话 | EN: Prevent cleanup from accidentally killing the session while the agent is processing (think/tools/streaming output)
                 agent_ids = [
                     str(session.initiator_agent_id),
                     str(session.responder_agent_id),
@@ -171,8 +171,8 @@ class SessionCleanupTask:
         """终止会话（完整版：乐观锁更新 + 系统消息 + 未读计数 + WebSocket 通知）"""
         now = datetime.now(timezone.utc)
 
-        # 乐观锁：原子更新状态，防止与 orchestrator 重复终止
-        # 仅在 termination_reason 为空时设置（保留暂停时记录的原始原因，如 DEADLOCK）
+        # 乐观锁：原子更新状态，防止与 orchestrator 重复终止 | EN: Optimistic locking: update state atomically to prevent repeated termination with orchestrator
+        # 仅在 termination_reason 为空时设置（保留暂停时记录的原始原因，如 DEADLOCK） | EN: Only set if termination_reason is empty (retains the original reason logged when suspending, such as DEADLOCK)
         effective_reason = reason.value if not session.termination_reason else session.termination_reason
         result = await db.execute(
             update(AgentDialogSession)
@@ -198,12 +198,12 @@ class SessionCleanupTask:
             )
             return
 
-        # 刷新获取更新后的状态
+        # 刷新获取更新后的状态 | EN: Refresh to get the updated status
         await db.refresh(session)
 
         owner_ids = [session.initiator_owner_id, session.responder_owner_id]
 
-        # ---- 更新卡片消息状态为 rejected/cancelled ----
+        # ---- 更新卡片消息状态为 rejected/cancelled ---- | EN: ---- Update card message status to rejected/cancelled ----
         try:
             from src.services.agent_dialog_service import agent_dialog_orchestrator
             await agent_dialog_orchestrator._update_card_messages_status(
@@ -212,7 +212,7 @@ class SessionCleanupTask:
         except Exception as e:
             logger.warning(f"[Session:{str(session.id)[:8]}] Failed to update card status: {e}")
 
-        # ---- 创建结构化对话状态消息 ----
+        # ---- 创建结构化对话状态消息 ---- | EN: ---- Create structured conversation status messages ----
         _REASON_FALLBACK = {
             "idle_timeout": "Idle timeout",
             "approval_timeout": "Approval request timed out",
@@ -233,14 +233,14 @@ class SessionCleanupTask:
         db.add(msg)
         await db.flush()  # 获取 msg.id / msg.created_at
 
-        # ---- 更新 conversation 未读计数和预览 ----
+        # ---- 更新 conversation 未读计数和预览 ---- | EN: ---- Update conversation unread count and preview ----
         conversation = await db.get(Conversation, session.conversation_id)
         if conversation:
             conversation.last_message_preview = f"[System] Dialog terminated. Reason: {fallback}"
             conversation.last_message_at = now
             conversation.updated_at = now
 
-            # 给双方 owner 增加未读
+            # 给双方 owner 增加未读 | EN: Add unread to both owners
             result = await db.execute(
                 select(ConversationParticipant).where(
                     and_(
@@ -255,12 +255,12 @@ class SessionCleanupTask:
 
         await db.flush()
 
-        # ---- WebSocket: 通知消息 + 终止事件 ----
-        # 用 try/except 包裹，确保 WS 通知失败不影响 DB 提交
+        # ---- WebSocket: 通知消息 + 终止事件 ---- | EN: ---- WebSocket: notification message + termination event ----
+        # 用 try/except 包裹，确保 WS 通知失败不影响 DB 提交 | EN: Wrap with try/except to ensure that failure of WS notification does not affect DB submission
         try:
             owner_id_strs = [str(oid) for oid in owner_ids]
 
-            # 发送 message.new 让前端知道有新的系统消息
+            # 发送 message.new 让前端知道有新的系统消息 | EN: Send message.new to let the front end know that there are new system messages
             await ws_manager.broadcast_message(
                 owner_id_strs,
                 {
@@ -280,7 +280,7 @@ class SessionCleanupTask:
                 },
             )
 
-            # 发送终止事件（用于更新卡片状态等）
+            # 发送终止事件（用于更新卡片状态等） | EN: Send termination event (used to update card status, etc.)
             await ws_manager.send_dialog_terminated(
                 user_ids=owner_id_strs,
                 session_id=str(session.id),
@@ -293,7 +293,7 @@ class SessionCleanupTask:
                 f"[Session:{str(session.id)[:8]}] WS notification failed: {ws_err}"
             )
 
-        # ---- 中止 Gateway 上正在进行的 run + 清理内存缓存 ----
+        # ---- 中止 Gateway 上正在进行的 run + 清理内存缓存 ---- | EN: ---- Abort ongoing run on Gateway + clean memory cache ----
         try:
             from src.services.agent_dialog_service import agent_dialog_orchestrator
             await agent_dialog_orchestrator._abort_active_runs(session)
@@ -303,7 +303,7 @@ class SessionCleanupTask:
                 f"[Session:{str(session.id)[:8]}] abort/cleanup failed: {abort_err}"
             )
 
-        # 广播 message.stop 给前端清理流式消息
+        # 广播 message.stop 给前端清理流式消息 | EN: Broadcast message.stop to the front end to clean up streaming messages
         try:
             await ws_manager.broadcast_message(
                 owner_id_strs,
@@ -320,5 +320,5 @@ class SessionCleanupTask:
         )
 
 
-# 全局实例（每 30 秒检查一次，确保超时响应及时）
+# 全局实例（每 30 秒检查一次，确保超时响应及时） | EN: Global instance (checked every 30 seconds to ensure timely response to timeouts)
 session_cleanup_task = SessionCleanupTask(check_interval=30)

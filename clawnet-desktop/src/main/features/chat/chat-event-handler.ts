@@ -130,7 +130,7 @@ export class ChatEventHandler {
     // `audit.intent_denied` — server reports that an attempted A2A
     // intent was denied (timeout, target offline, refused, etc.).
     // macOS doesn't surface this to the user; Win shows a text system
-    // message so the user knows why their "联系下 X" yielded no card.
+    // message so the user knows why their "联系下 X" yielded no card. | EN: message so the user knows why their "Contact X" yielded no card.
     // Captured live from prod (40-prod-intent-auth-probe.spec).
     opts.dispatcher.subscribe('audit.intent_denied', (p) =>
       this.handleIntentDeniedPush(p),

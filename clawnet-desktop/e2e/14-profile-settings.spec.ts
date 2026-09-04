@@ -96,9 +96,9 @@ test('settings → profile: edit displayName, change password, switch language',
   const langSelect = window.locator('select').first();
   await langSelect.selectOption('zh-Hans');
 
-  // Sidebar header re-renders with the Chinese "设置" string after the
+  // Sidebar header re-renders with the Chinese "设置" string after the | EN: Sidebar header re-renders with the Chinese "SET" string after the
   // i18n change resolves (async, but typically <300 ms). Use the sidebar
-  // header specifically — there are several "设置" candidates after
+  // header specifically — there are several "设置" candidates after | EN: header specifically — there are several "set" candidates after
   // switch (panel title, sidebar header).
   await expect(window.getByText('设置').first()).toBeVisible({ timeout: 5_000 });
 });

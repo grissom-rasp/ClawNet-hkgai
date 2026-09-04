@@ -38,13 +38,13 @@ import Testing
     @Test func trimsAfterChineseTriggerKeepsPostSpeech() {
         let triggers = ["小爪", "openclaw"]
         let text = "嘿 小爪 帮我打开设置"
-        #expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "帮我打开设置")
+        #expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "帮我打开设置") | EN: expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "Help me open settings")
     }
 
     @Test func trimsAfterTriggerHandlesWidthInsensitiveForms() {
         let triggers = ["openclaw"]
         let text = "ＯｐｅｎＣｌａｗ 请帮我"
-        #expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "请帮我")
+        #expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "请帮我") | EN: expect(VoiceWakeRuntime._testTrimmedAfterTrigger(text, triggers: triggers) == "Please help me")
     }
 
     @Test func gateRequiresGapBetweenTriggerAndCommand() {

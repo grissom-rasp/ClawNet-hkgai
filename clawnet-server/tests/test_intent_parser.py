@@ -1,7 +1,7 @@
 """
 Tests for intent_parser.py
 
-验证单标记和多标记提取、去重、清理逻辑。
+验证单标记和多标记提取、去重、清理逻辑。 / EN: Verify single-marker and multi-marker extraction, deduplication, and cleaning logic.
 """
 
 import pytest
@@ -108,7 +108,7 @@ class TestExtractDialogIntents:
         assert names == ["A", "B", "C"]
 
     def test_alt_pattern(self):
-        # 备用模式：关键字周围有空格但 << >> 不含空格
+        # 备用模式：关键字周围有空格但 << >> 不含空格 | EN: Alternate mode: keywords with spaces around them but << >> without spaces
         text = (
             "<<NEED_AGENT_DIALOG : target_owner = \"张三\" , topic = \"你好\" >>"
         )

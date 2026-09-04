@@ -144,7 +144,7 @@ async def update_contact(
     return ApiResponse(data=contact_resp)
 
 
-# ── 语言偏好 ──
+# ── 语言偏好 ── | EN: ── Language preference ──
 
 SUPPORTED_LANGS = {"zh-Hans", "zh-Hant", "en"}
 
@@ -172,7 +172,7 @@ async def update_language(
     return ApiResponse(data={"language": req.language})
 
 
-# ── 好友请求 ──
+# ── 好友请求 ── | EN: ── Friend request ──
 
 @router.post("/friend-requests", response_model=ApiResponse[FriendRequestResponse])
 async def send_friend_request(
@@ -181,7 +181,7 @@ async def send_friend_request(
     user: User = Depends(get_current_user),
 ):
     result = await user_service.send_friend_request(db, user.id, req)
-    # 通过 WebSocket 通知对方
+    # 通过 WebSocket 通知对方 | EN: Notify the other party via WebSocket
     from src.websocket.manager import ws_manager
     await ws_manager.send_to_user(str(req.to_user_id), {
         "type": "friend_request.new",
@@ -214,7 +214,7 @@ async def accept_friend_request(
     user: User = Depends(get_current_user),
 ):
     result = await user_service.accept_friend_request(db, user.id, request_id)
-    # 通知发起方：请求已被接受
+    # 通知发起方：请求已被接受 | EN: Notify the initiator that the request has been accepted
     from src.websocket.manager import ws_manager
     await ws_manager.send_to_user(str(result.from_user_id), {
         "type": "friend_request.accepted",
@@ -238,9 +238,9 @@ async def reject_friend_request(
     return ApiResponse(data=result)
 
 
-# ── 文件访问设置 ──
+# ── 文件访问设置 ── | EN: ──File access settings──
 
-# 默认拒绝路径（安全敏感，不可通过 UI 移除）
+# 默认拒绝路径（安全敏感，不可通过 UI 移除） | EN: Deny paths by default (security sensitive, not removable via UI)
 DEFAULT_DENIED_PATHS = [
     "/etc/shadow",
     "/etc/passwd",

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 #
-# ClawNet Admin CLI — 用户管理 + Gateway 容器生命周期
+# ClawNet Admin CLI — 用户管理 + Gateway 容器生命周期 | EN: ClawNet Admin CLI - User Management + Gateway Container Lifecycle
 #
-# 用法:
-#   ./admin.sh login                                    登录管理员账号
-#   ./admin.sh user list                                列出所有用户
-#   ./admin.sh user create <email> <name> <password>    创建用户并自动 provision
-#   ./admin.sh user get <email>                         查看用户详情
-#   ./admin.sh user provision <email>                   手动触发 provision
-#   ./admin.sh user restart <email>                     重启容器
-#   ./admin.sh user stop <email>                        停止容器（需确认）
-#   ./admin.sh user delete <email>                      删除用户（需确认）
-#   ./admin.sh status                                   总览所有容器状态
-#   ./admin.sh deploy                                   仅滚动重启所有容器
+# 用法: | EN: usage:
+#   ./admin.sh login                                    登录管理员账号 | EN: ./admin.sh login Log in to the administrator account
+#   ./admin.sh user list                                列出所有用户 | EN: ./admin.sh user list lists all users
+#   ./admin.sh user create <email> <name> <password>    创建用户并自动 provision | EN: ./admin.sh user create <email> <name> <password> Create user and automatically provision
+#   ./admin.sh user get <email>                         查看用户详情 | EN: ./admin.sh user get <email> View user details
+#   ./admin.sh user provision <email>                   手动触发 provision | EN: ./admin.sh user provision <email> Manually trigger provision
+#   ./admin.sh user restart <email>                     重启容器 | EN: ./admin.sh user restart <email> Restart the container
+#   ./admin.sh user stop <email>                        停止容器（需确认） | EN: ./admin.sh user stop <email> Stop the container (confirmation required)
+#   ./admin.sh user delete <email>                      删除用户（需确认） | EN: ./admin.sh user delete <email> Delete user (confirmation required)
+#   ./admin.sh status                                   总览所有容器状态 | EN: ./admin.sh status Overview of all container status
+#   ./admin.sh deploy                                   仅滚动重启所有容器 | EN: ./admin.sh deploy only rolling restart all containers
 #
 set -euo pipefail
 
@@ -156,7 +156,7 @@ ClawNet Admin CLI
   deploy                                   仅滚动重启所有容器（使用已有镜像）
 
 选项:
-  --env ENV    指定环境 (默认: v1)
+  --env ENV    指定环境 (默认: v1) | EN: env ENV specifies the environment (default: v1)
 
 示例:
   ./admin.sh login

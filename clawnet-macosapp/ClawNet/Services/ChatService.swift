@@ -135,7 +135,7 @@ final class ChatService {
     // MARK: - Server Message Handling
 
     private func handleServerMessage(_ msg: ServerMessage) {
-        // 收到任何服务端消息 = 连接活着，自动恢复状态
+        // 收到任何服务端消息 = 连接活着，自动恢复状态 | EN: Any server message received = connection is alive and automatically restored to state
         onConnectionRecovered?()
 
         switch msg.type {
@@ -859,7 +859,7 @@ final class ChatService {
 
     // MARK: - Discovery Event Handlers
 
-    /// 解析服务端 ISO8601 时间戳
+    /// 解析服务端 ISO8601 时间戳 | EN: / Parse server-side ISO8601 timestamp
     private func parseServerTimestamp(_ data: [String: Any]) -> Date? {
         (data["timestamp"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
     }

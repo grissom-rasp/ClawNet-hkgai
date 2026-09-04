@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-测试当前数据库内用户与 Agent 之间的联通情况。
+测试当前数据库内用户与 Agent 之间的联通情况。 / EN: Test the connectivity between users and Agent in the current database.
 
-检查项：
-  1. 用户列表及其拥有的 Agent（ownership via agents.owner_id）
-  2. 联系人关系（contacts 表中 user -> agent 的记录）
-  3. 会话关系（conversations + conversation_participants 中的 user-agent 配对）
-  4. Session Key 记录（agent_session_keys 中的 user-agent 绑定）
-  5. Gateway 配置可用性（config.py 中的 USER_GATEWAY_MAP）
+检查项： / EN: Check items:
+  1. 用户列表及其拥有的 Agent（ownership via agents.owner_id） / EN: 1. List of users and their owned Agents (ownership via agents.owner_id)
+  2. 联系人关系（contacts 表中 user -> agent 的记录） / EN: 2. Contact relationship (user -> agent record in the contacts table)
+  3. 会话关系（conversations + conversation_participants 中的 user-agent 配对） / EN: 3. Conversation relationship (conversations + user-agent pairing in conversation_participants)
+  4. Session Key 记录（agent_session_keys 中的 user-agent 绑定） / EN: 4. Session Key record (user-agent binding in agent_session_keys)
+  5. Gateway 配置可用性（config.py 中的 USER_GATEWAY_MAP） / EN: 5. Gateway configuration availability (USER_GATEWAY_MAP in config.py)
 
-用法：
+用法： / EN: usage:
   cd backend
   python tests/test_user_agent_connectivity.py
   python tests/test_user_agent_connectivity.py --db-url postgresql://clawnet:clawnet@localhost:5433/clawnet
@@ -73,7 +73,7 @@ def run(db_url: str) -> int:
     issues = []  # 收集问题
 
     # ================================================================
-    # 1. 用户列表
+    # 1. 用户列表 | EN: 1. User list
     # ================================================================
     print(f"[1] 用户列表")
     print(THIN)
@@ -92,7 +92,7 @@ def run(db_url: str) -> int:
     print(f"  共 {len(users)} 个用户\n")
 
     # ================================================================
-    # 2. Agent 列表 + 所属关系
+    # 2. Agent 列表 + 所属关系 | EN: 2. Agent list + affiliation
     # ================================================================
     print(f"[2] Agent 列表 (ownership)")
     print(THIN)
@@ -114,7 +114,7 @@ def run(db_url: str) -> int:
         print(f"  共 {len(agents)} 个 Agent\n")
 
     # ================================================================
-    # 3. 联系人关系 (contacts)
+    # 3. 联系人关系 (contacts) | EN: 3. Contacts
     # ================================================================
     print(f"[3] 联系人关系 (contacts, type=agent)")
     print(THIN)
@@ -137,7 +137,7 @@ def run(db_url: str) -> int:
         print(f"  共 {len(contacts)} 条\n")
 
     # ================================================================
-    # 4. 会话关系 (conversations with user+agent participants)
+    # 4. 会话关系 (conversations with user+agent participants) | EN: 4. Conversations with user+agent participants
     # ================================================================
     print(f"[4] 用户-Agent 会话 (conversations)")
     print(THIN)
@@ -173,7 +173,7 @@ def run(db_url: str) -> int:
         print(f"  共 {len(convs)} 个会话\n")
 
     # ================================================================
-    # 5. Session Key 记录 (agent_session_keys)
+    # 5. Session Key 记录 (agent_session_keys) | EN: 5. Session Key record (agent_session_keys)
     # ================================================================
     print(f"[5] Agent Session Keys")
     print(THIN)
@@ -197,7 +197,7 @@ def run(db_url: str) -> int:
         print(f"  共 {len(skeys)} 条\n")
 
     # ================================================================
-    # 6. 消息统计
+    # 6. 消息统计 | EN: 6. Message statistics
     # ================================================================
     print(f"[6] 消息统计 (按 user-agent 会话)")
     print(THIN)
@@ -221,7 +221,7 @@ def run(db_url: str) -> int:
     if not msg_stats:
         print("  (空) 没有消息。")
     else:
-        # 按 conversation 分组展示
+        # 按 conversation 分组展示 | EN: Display grouped by conversation
         conv_map = {}
         for ms in msg_stats:
             cid = str(ms["conversation_id"])
@@ -232,7 +232,7 @@ def run(db_url: str) -> int:
                 "last": ms["last_msg_at"],
             }
 
-        # 获取会话参与者名称
+        # 获取会话参与者名称 | EN: Get session participant names
         for cv in convs:
             cid = str(cv["conv_id"])
             if cid in conv_map:
@@ -248,12 +248,12 @@ def run(db_url: str) -> int:
         print()
 
     # ================================================================
-    # 7. 完整性检查
+    # 7. 完整性检查 | EN: 7. Integrity check
     # ================================================================
     print(f"[7] 完整性检查")
     print(THIN)
 
-    # 7a. 每个 user 的 agent 是否都有 contact 记录
+    # 7a. 每个 user 的 agent 是否都有 contact 记录 | EN: 7a. Does each user’s agent have contact records?
     for u in users:
         uid = str(u["id"])
         owned_agents = [a for a in agents if str(a["owner_id"]) == uid]
@@ -268,7 +268,7 @@ def run(db_url: str) -> int:
                 print(msg)
                 issues.append(msg)
 
-    # 7b. 每个 user-agent 对是否都有会话
+    # 7b. 每个 user-agent 对是否都有会话 | EN: 7b. Whether each user-agent pair has a session
     for u in users:
         uid = str(u["id"])
         owned_agents = [a for a in agents if str(a["owner_id"]) == uid]
@@ -283,7 +283,7 @@ def run(db_url: str) -> int:
                 print(msg)
                 issues.append(msg)
 
-    # 7c. 每个 user-agent 对是否有 session key
+    # 7c. 每个 user-agent 对是否有 session key | EN: 7c. Whether each user-agent pair has a session key
     for u in users:
         uid = str(u["id"])
         owned_agents = [a for a in agents if str(a["owner_id"]) == uid]
@@ -298,7 +298,7 @@ def run(db_url: str) -> int:
                 print(msg)
                 issues.append(msg)
 
-    # 7d. Gateway 配置检查
+    # 7d. Gateway 配置检查 | EN: 7d. Gateway configuration check
     for u in users:
         uid = str(u["id"])
         has_gw = uid in USER_GATEWAY_MAP
@@ -308,7 +308,7 @@ def run(db_url: str) -> int:
             print(msg)
             issues.append(msg)
 
-    # 7e. 孤儿 Agent（owner 不存在）
+    # 7e. 孤儿 Agent（owner 不存在） | EN: 7e. Orphan Agent (owner does not exist)
     user_ids = {str(u["id"]) for u in users}
     for ag in agents:
         if str(ag["owner_id"]) not in user_ids:
@@ -320,7 +320,7 @@ def run(db_url: str) -> int:
         print("  所有检查通过！用户-Agent 关系完整。")
 
     # ================================================================
-    # 汇总
+    # 汇总 | EN: Summary
     # ================================================================
     print(f"\n{SEP}")
     print(f"  汇总")

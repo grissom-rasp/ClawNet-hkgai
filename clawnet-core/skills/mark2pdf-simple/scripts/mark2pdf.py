@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-mark2pdf - 简洁的Markdown转PDF工具
-使用本地中文字体，确保中文不乱码
+mark2pdf - 简洁的Markdown转PDF工具 / EN: mark2pdf - A simple Markdown to PDF conversion tool
+使用本地中文字体，确保中文不乱码 / EN: Use local Chinese fonts to ensure that Chinese characters are not garbled
 """
 
 import argparse
@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-# 检查依赖
+# 检查依赖 | EN: Check dependencies
 try:
     import markdown
 except ImportError:
@@ -115,18 +115,18 @@ class Mark2PDF:
     def convert(self, input_path, output_path):
         """转换Markdown文件为PDF"""
         try:
-            # 读取文件
+            # 读取文件 | EN: read file
             with open(input_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
             print(f"📖 读取: {Path(input_path).name}")
             
-            # 检查中文字符
+            # 检查中文字符 | EN: Check Chinese characters
             chinese_chars = sum(1 for c in content if '\u4e00' <= c <= '\u9fff')
             if chinese_chars > 0:
                 print(f"   中文字符: {chinese_chars}")
             
-            # 转换为HTML
+            # 转换为HTML | EN: Convert to HTML
             html_content = markdown.markdown(content, extensions=['extra'])
             html_doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -139,7 +139,7 @@ class Mark2PDF:
 </body>
 </html>"""
             
-            # 生成PDF
+            # 生成PDF | EN: Generate PDF
             print(f"🖨️  生成: {Path(output_path).name}")
             font_config = FontConfiguration()
             html = HTML(string=html_doc)
@@ -147,7 +147,7 @@ class Mark2PDF:
             
             html.write_pdf(output_path, stylesheets=[css], font_config=font_config)
             
-            # 验证结果
+            # 验证结果 | EN: Verification results
             if os.path.exists(output_path):
                 size = os.path.getsize(output_path)
                 print(f"✅ PDF创建成功: {size:,} 字节")
@@ -170,19 +170,19 @@ def main():
     
     args = parser.parse_args()
     
-    # 验证输入文件
+    # 验证输入文件 | EN: Validate input files
     input_path = Path(args.input)
     if not input_path.exists():
         print(f"❌ 文件不存在: {input_path}")
         sys.exit(1)
     
-    # 确定输出路径
+    # 确定输出路径 | EN: Determine output path
     if args.output:
         output_path = Path(args.output)
     else:
         output_path = input_path.with_suffix('.pdf')
     
-    # 执行转换
+    # 执行转换 | EN: perform conversion
     converter = Mark2PDF()
     success = converter.convert(str(input_path), str(output_path))
     

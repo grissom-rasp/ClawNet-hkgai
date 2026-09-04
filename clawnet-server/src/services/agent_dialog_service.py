@@ -1,11 +1,11 @@
 """
 Agent Dialog Service
 
-Agent-to-Agent 对话的核心调度器，包括：
-- 会话创建与授权管理
-- Prompt 注入与标记提取
-- 轮转调度
-- 终止判定引擎
+Agent-to-Agent 对话的核心调度器，包括： / EN: The core scheduler for Agent-to-Agent conversations, including:
+- 会话创建与授权管理 / EN: - Session creation and authorization management
+- Prompt 注入与标记提取 / EN: - Prompt injection and tag extraction
+- 轮转调度 / EN: - Round robin scheduling
+- 终止判定引擎 / EN: - Terminate the decision engine
 """
 
 import asyncio
@@ -144,51 +144,51 @@ async def _fetch_source_context(
     return f"{header}\n" + "\n".join(lines) + f"\n{footer}"
 
 
-# ============ Prompt 模板（已迁移至 prompt_templates.py） ============
-# 通过 get_template("initiator"/"responder"/"initial", lang) 获取
+# ============ Prompt 模板（已迁移至 prompt_templates.py） ============ | EN: ============ Prompt templates (migrated to prompt_templates.py) ============
+# 通过 get_template("initiator"/"responder"/"initial", lang) 获取 | EN: Obtained through get_template("initiator"/"responder"/"initial", lang)
 
 
-# ============ 状态标记提取 ============
+# ============ 状态标记提取 ============ | EN: ============ Status tag extraction ============
 
 STATUS_MARKER_PATTERN = re.compile(r"<<(RESOLVED|CONTINUE|DEADLOCK)>>", re.IGNORECASE)
 
 
 def extract_dialog_status(text: str) -> tuple[str, Optional[str]]:
-    """从 Agent 回复中提取状态标记
+    """从 Agent 回复中提取状态标记 / EN: """Extract status tags from Agent replies
     
     Returns:
         tuple: (clean_text, status_marker)
-        - clean_text: 移除标记后的文本
+        - clean_text: 移除标记后的文本 / EN: - clean_text: remove the marked text
         - status_marker: RESOLVED / CONTINUE / DEADLOCK / None
     """
     match = STATUS_MARKER_PATTERN.search(text)
     if match:
         marker = match.group(1).upper()
-        # 移除标记
+        # 移除标记 | EN: remove mark
         clean_text = STATUS_MARKER_PATTERN.sub("", text).strip()
         return clean_text, marker
     return text.strip(), None
 
 
-# ============ 回复清洗 ============
+# ============ 回复清洗 ============ | EN: ============ Reply Cleaning ============
 
-# 需要清除的 LLM 杂质模式
+# 需要清除的 LLM 杂质模式 | EN: LLM impurity patterns that need to be cleared
 _ARTIFACT_PATTERNS = [
-    # XML 风格的 function_calls / invoke / parameter 标签
+    # XML 风格的 function_calls / invoke / parameter 标签 | EN: XML-style function_calls / invoke / parameter tags
     re.compile(r"</?(?:antml:)?(?:function_calls|invoke|parameter|tool_use|tool_result)[^>]*>", re.IGNORECASE),
-    # 类似 function_calls> 的残缺标签
+    # 类似 function_calls> 的残缺标签 | EN: Broken tags like function_calls>
     re.compile(r"(?:function_calls|invoke|parameter)\s*>", re.IGNORECASE),
-    # [AGENT_DIALOG] ... [/AGENT_DIALOG] 系统指令回显
+    # [AGENT_DIALOG] ... [/AGENT_DIALOG] 系统指令回显 | EN: [AGENT_DIALOG] ... [/AGENT_DIALOG] System command echo
     re.compile(r"\[/?AGENT_DIALOG[^\]]*\]", re.IGNORECASE),
-    # 泄漏的 prompt 指令标记
+    # 泄漏的 prompt 指令标记 | EN: Leaked prompt directive tag
     re.compile(r"\[系统指令[^\]]*\]", re.IGNORECASE),
-    # <<RESOLVED>> / <<CONTINUE>> / <<DEADLOCK>> 状态标记
+    # <<RESOLVED>> / <<CONTINUE>> / <<DEADLOCK>> 状态标记 | EN: <<RESOLVED>> / <<CONTINUE>> / <<DEADLOCK>> status tags
     re.compile(r"<<(?:RESOLVED|CONTINUE|DEADLOCK)>>", re.IGNORECASE),
-    # <<NEED_AGENT_DIALOG:...>> 意图标记
+    # <<NEED_AGENT_DIALOG:...>> 意图标记 | EN: <<NEED_AGENT_DIALOG:...>> Intent tag
     re.compile(r"<<NEED_AGENT_DIALOG[^>]*>>", re.DOTALL),
 ]
 
-# 需要整行删除的模式（如果某行只包含杂质，删掉整行）
+# 需要整行删除的模式（如果某行只包含杂质，删掉整行） | EN: Mode that requires deletion of the entire line (if a line only contains impurities, delete the entire line)
 _LINE_ARTIFACT_PATTERNS = [
     re.compile(r"^\s*</?(?:antml:)?(?:function_calls|invoke|parameter)[^>]*>\s*$", re.IGNORECASE),
     re.compile(r'^\s*<parameter\s+name=', re.IGNORECASE),
@@ -196,14 +196,14 @@ _LINE_ARTIFACT_PATTERNS = [
 
 
 def _clean_agent_response(text: str) -> str:
-    """清洗 Agent 回复中的 LLM 杂质
+    """清洗 Agent 回复中的 LLM 杂质 / EN: """Clean LLM impurities in Agent replies
     
-    移除：
-    - XML 标签（function_calls, invoke, parameter 等）
-    - 系统指令回显
-    - 残缺的标记片段
+    移除： / EN: Remove:
+    - XML 标签（function_calls, invoke, parameter 等） / EN: - XML ​​tags (function_calls, invoke, parameter, etc.)
+    - 系统指令回显 / EN: - System command echo
+    - 残缺的标记片段 / EN: - Broken marked fragments
     """
-    # 先逐行处理，删掉纯杂质行
+    # 先逐行处理，删掉纯杂质行 | EN: Process line by line first and delete pure impurity lines.
     lines = text.split("\n")
     cleaned_lines = []
     for line in lines:
@@ -216,11 +216,11 @@ def _clean_agent_response(text: str) -> str:
             cleaned_lines.append(line)
     text = "\n".join(cleaned_lines)
     
-    # 全局替换
+    # 全局替换 | EN: Global replacement
     for pattern in _ARTIFACT_PATTERNS:
         text = pattern.sub("", text)
     
-    # 清理多余空行
+    # 清理多余空行 | EN: Clean up extra blank lines
     while "\n\n\n" in text:
         text = text.replace("\n\n\n", "\n\n")
     
@@ -235,21 +235,21 @@ def calculate_text_similarity(text1: str, text2: str) -> float:
 # ============ Agent Dialog Orchestrator ============
 
 class AgentDialogOrchestrator:
-    """Agent 对话调度器
+    """Agent 对话调度器 / EN: """Agent Dialog Scheduler
     
-    核心职责：
-    1. 管理对话会话的生命周期
-    2. 处理双方 Owner 的授权
-    3. 轮转调度 Agent 间的对话
-    4. 终止判定
+    核心职责： / EN: Core Responsibilities:
+    1. 管理对话会话的生命周期 / EN: 1. Manage the life cycle of conversation sessions
+    2. 处理双方 Owner 的授权 / EN: 2. Process the authorization of both owners
+    3. 轮转调度 Agent 间的对话 / EN: 3. Schedule conversations between Agents in turn
+    4. 终止判定 / EN: 4. Termination judgment
     """
 
     def __init__(self):
-        # 活跃的对话会话 (session_id -> session context)
-        # 注意：这些是性能缓存，DB 是唯一真实状态源
+        # 活跃的对话会话 (session_id -> session context) | EN: Active conversation session (session_id -> session context)
+        # 注意：这些是性能缓存，DB 是唯一真实状态源 | EN: NOTE: These are performance caches, DB is the only source of truth
         self._active_sessions: dict[str, dict] = {}
         self._lock = asyncio.Lock()
-        # 用于标记缺失兜底检测
+        # 用于标记缺失兜底检测 | EN: Used to detect missing marks
         self._recent_messages: dict[str, list[str]] = {}  # session_id -> last N messages
         self._missing_marker_count: dict[str, int] = {}  # session_id -> consecutive missing count
         # Draft sessions for human review (keyed by (session_id, round_num, agent_type))
@@ -307,23 +307,23 @@ class AgentDialogOrchestrator:
         req: CreateDialogSessionRequest,
         created_by_user_id: uuid.UUID,
     ) -> DialogSessionResponse:
-        """创建 Agent 对话会话
+        """创建 Agent 对话会话 / EN: """Create Agent conversation session
 
-        1. 验证参与方
-        2. 创建会话和 AgentDialogSession
-        3. 发送授权请求给双方 Owner
+        1. 验证参与方 / EN: 1. Verify participants
+        2. 创建会话和 AgentDialogSession / EN: 2. Create session and AgentDialogSession
+        3. 发送授权请求给双方 Owner / EN: 3. Send authorization request to both owners
         """
-        # 获取发起方 Agent 信息
+        # 获取发起方 Agent 信息 | EN: Get the initiator Agent information
         initiator_agent = await db.get(Agent, req.initiator_agent_id)
         if not initiator_agent:
             raise ValueError(f"Initiator agent {req.initiator_agent_id} not found")
 
-        # 验证发起方是 Owner（在路由前就验证，避免无意义的路由操作）
+        # 验证发起方是 Owner（在路由前就验证，避免无意义的路由操作） | EN: Verify that the initiator is the Owner (verify before routing to avoid meaningless routing operations)
         if initiator_agent.owner_id != created_by_user_id:
             raise ValueError("You are not the owner of the initiator agent")
 
-        # 解析接收方 Agent：始终通过 Contact tag 路由
-        # 1. 确定 responder owner ID
+        # 解析接收方 Agent：始终通过 Contact tag 路由 | EN: Resolve receiver Agent: always route via Contact tag
+        # 1. 确定 responder owner ID | EN: 1. Determine responder owner ID
         if req.responder_agent_id:
             hint_agent = await db.get(Agent, req.responder_agent_id)
             if not hint_agent:
@@ -335,14 +335,14 @@ class AgentDialogOrchestrator:
         else:
             raise ValueError("Either responder_agent_id or responder_owner_id must be provided")
 
-        # 2. 始终通过 Contact tag 路由选择正确的 responder agent
+        # 2. 始终通过 Contact tag 路由选择正确的 responder agent | EN: 2. Always select the correct responder agent via Contact tag routing
         routed_agent_id = await _route_agent_by_tag(
             db, responder_owner_id, initiator_agent.owner_id
         )
         if routed_agent_id:
             responder_agent = await db.get(Agent, routed_agent_id)
         else:
-            # Fallback: 使用前端提供的 agent，或任意在线 agent
+            # Fallback: 使用前端提供的 agent，或任意在线 agent | EN: Fallback: Use the agent provided by the front end, or any online agent
             if hint_agent:
                 responder_agent = hint_agent
             else:
@@ -358,7 +358,7 @@ class AgentDialogOrchestrator:
         if not responder_agent:
             raise ValueError("No available agent found for the responder owner")
 
-        # 如果两个 Agent 属于不同 Owner，校验 Owner 之间的联系人关系
+        # 如果两个 Agent 属于不同 Owner，校验 Owner 之间的联系人关系 | EN: If two Agents belong to different Owners, verify the contact relationship between Owners
         if initiator_agent.owner_id != responder_agent.owner_id:
             from src.services.contact_check import are_owners_contacts
             if not await are_owners_contacts(db, initiator_agent.owner_id, responder_agent.owner_id):
@@ -375,14 +375,14 @@ class AgentDialogOrchestrator:
         if responder_tag and responder_tag.is_main:
             raise ValueError("Main agent cannot participate in A2A dialogs")
 
-        # 获取 Owner 信息
+        # 获取 Owner 信息 | EN: Get Owner information
         initiator_owner = await db.get(User, initiator_agent.owner_id)
         responder_owner = await db.get(User, responder_agent.owner_id)
 
         if not initiator_owner or not responder_owner:
             raise ValueError("Owner not found")
 
-        # 创建会话
+        # 创建会话 | EN: Create session
         conversation = Conversation(
             type="agent_task",
             created_by=created_by_user_id,
@@ -393,7 +393,7 @@ class AgentDialogOrchestrator:
         db.add(conversation)
         await db.flush()
 
-        # 添加参与者（双方 Agent 和双方 Owner）
+        # 添加参与者（双方 Agent 和双方 Owner） | EN: Add participants (Both Agents and Both Owners)
         participants = [
             ConversationParticipant(
                 conversation_id=conversation.id,
@@ -419,7 +419,7 @@ class AgentDialogOrchestrator:
         for p in participants:
             db.add(p)
 
-        # 创建 AgentDialogSession
+        # 创建 AgentDialogSession | EN: Create AgentDialogSession
         session = AgentDialogSession(
             conversation_id=conversation.id,
             initiator_agent_id=initiator_agent.id,
@@ -430,26 +430,26 @@ class AgentDialogOrchestrator:
             max_rounds=req.max_rounds,
             idle_timeout_seconds=req.idle_timeout_seconds,
             status=DialogSessionStatus.PENDING_APPROVAL.value,
-            # 发起方 Owner 自动授权（因为是他发起的）
+            # 发起方 Owner 自动授权（因为是他发起的） | EN: The initiator Owner automatically authorizes (because he initiated it)
             initiator_approved=True,
-            # 元数据（如原始会话信息，用于结果回传）
+            # 元数据（如原始会话信息，用于结果回传） | EN: Metadata (such as original session information, used for result return)
             metadata_=req.metadata,
         )
         db.add(session)
         await db.flush()
 
-        # ---- 解析双方各自的 contact tag（各自只能看到自己给对方打的 tag）----
+        # ---- 解析双方各自的 contact tag（各自只能看到自己给对方打的 tag）---- | EN: ---- Analyze the contact tags of both parties (each can only see the tags they have given to the other party)----
         from src.services import tag_service
-        # A 给 B 打的 tag（A 的视角：我把 B 分类为什么）
+        # A 给 B 打的 tag（A 的视角：我把 B 分类为什么） | EN: A's tag for B (A's perspective: What do I classify B as)
         initiator_contact_tag = await tag_service.resolve_tag_for_contact(
             db, initiator_owner.id, responder_owner.id
         )
-        # B 给 A 打的 tag（B 的视角：我把 A 分类为什么）
+        # B 给 A 打的 tag（B 的视角：我把 A 分类为什么） | EN: B's tag for A (B's perspective: What do I classify A as)
         responder_contact_tag = await tag_service.resolve_tag_for_contact(
             db, responder_owner.id, initiator_owner.id
         )
 
-        # ---- 消息1: 发起方看到的"请求已发送"卡片 ----
+        # ---- 消息1: 发起方看到的"请求已发送"卡片 ---- | EN: ---- Message 1: "Request Sent" card seen by the initiator ----
         request_msg = Message(
             conversation_id=conversation.id,
             sender_id=initiator_agent.id,
@@ -486,7 +486,7 @@ class AgentDialogOrchestrator:
         )
         db.add(request_msg)
 
-        # ---- 消息2: 接收方看到的"授权请求"卡片 ----
+        # ---- 消息2: 接收方看到的"授权请求"卡片 ---- | EN: ---- Message 2: "Authorization Request" card seen by the recipient ----
         approval_msg = Message(
             conversation_id=conversation.id,
             sender_id=initiator_agent.id,
@@ -522,14 +522,14 @@ class AgentDialogOrchestrator:
         )
         db.add(approval_msg)
         
-        # 更新会话的最后消息预览
+        # 更新会话的最后消息预览 | EN: Update conversation's last message preview
         now = datetime.now(timezone.utc)
         from src.services.prompt_templates import get_reason_string, get_user_lang
         conversation.last_message_preview = get_reason_string("pending_label", get_user_lang(responder_owner)) + req.topic[:60]
         conversation.last_message_at = now
         conversation.updated_at = now
         
-        # 给接收方 Owner 增加未读计数
+        # 给接收方 Owner 增加未读计数 | EN: Increase the unread count for the receiver Owner
         for p in participants:
             if p.participant_id == responder_owner.id:
                 p.unread_count = (p.unread_count or 0) + 1
@@ -537,7 +537,7 @@ class AgentDialogOrchestrator:
         
         await db.flush()
 
-        # 收集事件（随事务持久化）
+        # 收集事件（随事务持久化） | EN: Collect events (persist with transaction)
         events = EventCollector()
 
         sender_data = {
@@ -548,7 +548,7 @@ class AgentDialogOrchestrator:
             "owner_name": initiator_owner.display_name,
         }
 
-        # 事件1: 接收方 Owner 的授权请求弹窗
+        # 事件1: 接收方 Owner 的授权请求弹窗 | EN: Event 1: Authorization request pop-up window from the receiver Owner
         events.add(db, str(responder_owner.id), "dialog.approval_request", {
             "session_id": str(session.id),
             "topic": req.topic,
@@ -572,7 +572,7 @@ class AgentDialogOrchestrator:
             "created_at": session.created_at.isoformat(),
         })
 
-        # 事件2: 发起方 Owner 的 dialog_request 卡片
+        # 事件2: 发起方 Owner 的 dialog_request 卡片 | EN: Event 2: dialog_request card of the initiator Owner
         events.add(db, str(initiator_owner.id), "message.new", {
             "id": str(request_msg.id),
             "conversation_id": str(conversation.id),
@@ -582,7 +582,7 @@ class AgentDialogOrchestrator:
             "timestamp": request_msg.timestamp.isoformat(),
         })
 
-        # 事件3: 接收方 Owner 的 dialog_approval 卡片
+        # 事件3: 接收方 Owner 的 dialog_approval 卡片 | EN: Event 3: dialog_approval card of the receiver Owner
         events.add(db, str(responder_owner.id), "message.new", {
             "id": str(approval_msg.id),
             "conversation_id": str(conversation.id),
@@ -592,7 +592,7 @@ class AgentDialogOrchestrator:
             "timestamp": approval_msg.timestamp.isoformat(),
         })
 
-        # 事件4: 通知发起方 Owner 请求已发送（触发会话列表刷新）
+        # 事件4: 通知发起方 Owner 请求已发送（触发会话列表刷新） | EN: Event 4: Notify the initiator that the Owner request has been sent (triggers session list refresh)
         events.add(db, str(initiator_owner.id), "dialog.request_sent", {
             "session_id": str(session.id),
             "conversation_id": str(conversation.id),
@@ -608,7 +608,7 @@ class AgentDialogOrchestrator:
         })
 
         response = await self._build_session_response(session, db)
-        # 先 commit，再投递通知
+        # 先 commit，再投递通知 | EN: Commit first, then deliver the notification
         await db.commit()
         await events.deliver()
         return response
@@ -626,7 +626,7 @@ class AgentDialogOrchestrator:
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
-        # 确定是哪一方
+        # 确定是哪一方 | EN: Determine which party it is
         if user_id == session.initiator_owner_id:
             already_decided = session.initiator_approved is not None
             same_decision = session.initiator_approved == approved
@@ -636,7 +636,7 @@ class AgentDialogOrchestrator:
         else:
             raise ValueError("You are not a participant owner of this session")
 
-        # 幂等：如果 session 已不是 PENDING，且用户已做过相同决定，直接返回
+        # 幂等：如果 session 已不是 PENDING，且用户已做过相同决定，直接返回 | EN: Idempotent: If the session is no longer PENDING and the user has already made the same decision, return directly
         if session.status != DialogSessionStatus.PENDING_APPROVAL.value:
             if already_decided and same_decision:
                 logger.info(
@@ -646,7 +646,7 @@ class AgentDialogOrchestrator:
                 return await self._build_session_response(session, db)
             raise ValueError(f"Session is not pending approval, current status: {session.status}")
 
-        # 设置授权状态
+        # 设置授权状态 | EN: Set authorization status
         if user_id == session.initiator_owner_id:
             session.initiator_approved = approved
         else:
@@ -655,17 +655,17 @@ class AgentDialogOrchestrator:
         old_status = session.status
 
         if not approved:
-            # 任一方拒绝
+            # 任一方拒绝 | EN: Either party refuses
             session.status = DialogSessionStatus.TERMINATED.value
             session.termination_reason = TerminationReason.OWNER_REJECTED.value
             session.completed_at = datetime.now(timezone.utc)
             
-            # 更新数据库中的卡片消息状态
+            # 更新数据库中的卡片消息状态 | EN: Update card message status in database
             await self._update_card_messages_status(
                 db, session.conversation_id, str(session_id), "rejected",
             )
 
-            # 给发起方的原始会话发一条系统消息（确保有未读提醒）
+            # 给发起方的原始会话发一条系统消息（确保有未读提醒） | EN: Send a system message to the original session of the initiator (make sure there is an unread reminder)
             metadata = session.metadata_ or {}
             source_conv_id = metadata.get("source_conversation_id")
             if source_conv_id:
@@ -683,7 +683,7 @@ class AgentDialogOrchestrator:
                     owner_ids=[session.initiator_owner_id],
                 )
 
-            # 收集事件
+            # 收集事件 | EN: Collect events
             events = EventCollector()
             user_ids = [str(session.initiator_owner_id), str(session.responder_owner_id)]
             status_payload = {
@@ -701,7 +701,7 @@ class AgentDialogOrchestrator:
             await db.commit()
             await events.deliver()
 
-            # 如果是 discovery 子对话，通知编排器
+            # 如果是 discovery 子对话，通知编排器 | EN: If it is a discovery sub-conversation, notify the orchestrator
             if metadata.get("discovery_task_id"):
                 logger.info(
                     f"[Session:{str(session_id)[:8]}] Rejection on discovery dialog, "
@@ -712,7 +712,7 @@ class AgentDialogOrchestrator:
             return response
 
         elif session.initiator_approved and session.responder_approved:
-            # 双方都授权，用乐观锁原子切换到 ACTIVE
+            # 双方都授权，用乐观锁原子切换到 ACTIVE | EN: Both parties authorize, use optimistic locking to atomically switch to ACTIVE
             activate_result = await db.execute(
                 update(AgentDialogSession)
                 .where(
@@ -732,12 +732,12 @@ class AgentDialogOrchestrator:
 
             await db.refresh(session)
 
-            # 更新数据库中的卡片消息状态
+            # 更新数据库中的卡片消息状态 | EN: Update card message status in database
             await self._update_card_messages_status(
                 db, session.conversation_id, str(session_id), "approved",
             )
 
-            # 收集事件
+            # 收集事件 | EN: Collect events
             events = EventCollector()
             user_ids = [str(session.initiator_owner_id), str(session.responder_owner_id)]
             status_payload = {
@@ -786,7 +786,7 @@ class AgentDialogOrchestrator:
 
         old_status = session.status
 
-        # 乐观锁：原子更新状态为 TERMINATED
+        # 乐观锁：原子更新状态为 TERMINATED | EN: Optimistic locking: atomic update status is TERMINATED
         result = await db.execute(
             update(AgentDialogSession)
             .where(
@@ -809,13 +809,13 @@ class AgentDialogOrchestrator:
 
         await db.refresh(session)
 
-        # 清理内存缓存
+        # 清理内存缓存 | EN: Clear memory cache
         self._cleanup_memory_state(str(session_id))
 
-        # 中止 Gateway 上正在进行的 run（两个 Agent 各自的 session_key）
+        # 中止 Gateway 上正在进行的 run（两个 Agent 各自的 session_key） | EN: Abort the ongoing run on the Gateway (each agent's session_key)
         await self._abort_active_runs(session)
 
-        # 广播 message.stop 给前端清理流式消息
+        # 广播 message.stop 给前端清理流式消息 | EN: Broadcast message.stop to the front end to clean up streaming messages
         conv_id_str = str(session.conversation_id)
         owner_ids = [str(session.initiator_owner_id), str(session.responder_owner_id)]
         await ws_manager.broadcast_message(
@@ -826,7 +826,7 @@ class AgentDialogOrchestrator:
             },
         )
 
-        # 发送结构化对话状态消息
+        # 发送结构化对话状态消息 | EN: Send structured conversation status messages
         await self._send_dialog_status(
             db,
             session.conversation_id,
@@ -835,7 +835,7 @@ class AgentDialogOrchestrator:
             owner_ids=[session.initiator_owner_id, session.responder_owner_id],
         )
 
-        # 收集事件
+        # 收集事件 | EN: Collect events
         events = EventCollector()
         user_ids = [str(session.initiator_owner_id), str(session.responder_owner_id)]
         terminated_payload = {
@@ -852,7 +852,7 @@ class AgentDialogOrchestrator:
         await db.commit()
         await events.deliver()
 
-        # 如果有源对话（discovery 或直接 A2A），回传结果给源 Agent
+        # 如果有源对话（discovery 或直接 A2A），回传结果给源 Agent | EN: If there is a source conversation (discovery or direct A2A), return the result to the source Agent
         if not skip_discovery_feedback:
             metadata = session.metadata_ or {}
             if metadata.get("discovery_task_id") or metadata.get("source_conversation_id"):
@@ -893,7 +893,7 @@ class AgentDialogOrchestrator:
         initiator_owner = await db.get(User, session.initiator_owner_id)
         lang = get_user_lang(initiator_owner)
 
-        # 收集事件
+        # 收集事件 | EN: Collect events
         events = EventCollector()
         user_ids = [str(session.initiator_owner_id), str(session.responder_owner_id)]
         status_payload = {
@@ -911,7 +911,7 @@ class AgentDialogOrchestrator:
         await db.commit()
         await events.deliver()
 
-        # 如果之前是暂停状态，继续对话
+        # 如果之前是暂停状态，继续对话 | EN: If previously paused, continue the conversation
         if was_paused:
             asyncio.create_task(self._continue_dialog(session_id))
 
@@ -971,7 +971,7 @@ class AgentDialogOrchestrator:
         if status:
             query = query.where(AgentDialogSession.status == status)
         
-        # 获取总数
+        # 获取总数 | EN: Get total
         count_query = select(AgentDialogSession.id).where(
             (AgentDialogSession.initiator_owner_id == user_id) |
             (AgentDialogSession.responder_owner_id == user_id)
@@ -982,7 +982,7 @@ class AgentDialogOrchestrator:
         count_result = await db.execute(count_query)
         total = len(count_result.all())
         
-        # 获取数据
+        # 获取数据 | EN: Get data
         query = query.order_by(AgentDialogSession.created_at.desc()).limit(limit).offset(offset)
         result = await db.execute(query)
         sessions = result.scalars().all()
@@ -993,7 +993,7 @@ class AgentDialogOrchestrator:
         
         return responses, total
 
-    # ============ 内部方法 ============
+    # ============ 内部方法 ============ | EN: ============ Internal methods ============
 
     async def _start_dialog(self, session_id: uuid.UUID):
         """启动对话（发送首条消息给发起方 Agent）"""
@@ -1002,7 +1002,7 @@ class AgentDialogOrchestrator:
             if not session or session.status != DialogSessionStatus.ACTIVE.value:
                 return
             
-            # 获取参与方信息
+            # 获取参与方信息 | EN: Get participant information
             initiator_agent = await db.get(Agent, session.initiator_agent_id)
             responder_agent = await db.get(Agent, session.responder_agent_id)
             initiator_owner = await db.get(User, session.initiator_owner_id)
@@ -1012,7 +1012,7 @@ class AgentDialogOrchestrator:
                 logger.error(f"[Session:{str(session_id)[:8]}] Failed to get participants")
                 return
 
-            # 注册到活跃会话缓存（asyncio 单线程，dict 操作无需锁）
+            # 注册到活跃会话缓存（asyncio 单线程，dict 操作无需锁） | EN: Register to the active session cache (asyncio single-threaded, no lock required for dict operations)
             self._active_sessions[str(session_id)] = {
                 "current_speaker": "initiator",
                 "waiting_response": True,
@@ -1020,11 +1020,11 @@ class AgentDialogOrchestrator:
             self._recent_messages[str(session_id)] = []
             self._missing_marker_count[str(session_id)] = 0
 
-            # 获取发起方语言偏好
+            # 获取发起方语言偏好 | EN: Get the initiator's language preference
             from src.services.prompt_templates import get_template, get_user_lang
             lang = get_user_lang(initiator_owner)
 
-            # 获取源对话上下文
+            # 获取源对话上下文 | EN: Get source conversation context
             metadata = session.metadata_ or {}
             source_conv_id = metadata.get("source_conversation_id")
             source_context = ""
@@ -1033,7 +1033,7 @@ class AgentDialogOrchestrator:
                 if source_context:
                     source_context = "\n" + source_context + "\n"
 
-            # 构建首条消息的 Prompt
+            # 构建首条消息的 Prompt | EN: Prompt to build the first message
             prompt = get_template("initial", lang).format(
                 my_owner_name=initiator_owner.display_name,
                 other_owner_name=responder_owner.display_name,
@@ -1042,7 +1042,7 @@ class AgentDialogOrchestrator:
                 source_context=source_context,
             )
 
-            # 发送给发起方 Agent
+            # 发送给发起方 Agent | EN: Sent to the initiating Agent
             await self._send_to_agent(
                 session=session,
                 agent=initiator_agent,
@@ -1057,7 +1057,7 @@ class AgentDialogOrchestrator:
             if not session or session.status != DialogSessionStatus.ACTIVE.value:
                 return
 
-            # 确保内存缓存存在（可能被 cleanup 清理过）
+            # 确保内存缓存存在（可能被 cleanup 清理过） | EN: Make sure the memory cache exists (possibly cleaned by cleanup)
             session_id_str = str(session_id)
             if session_id_str not in self._active_sessions:
                 self._active_sessions[session_id_str] = {
@@ -1065,7 +1065,7 @@ class AgentDialogOrchestrator:
                     "waiting_response": True,
                 }
 
-            # 获取最后一条 agent 消息，从 sender_id 推断谁是上一个发言者
+            # 获取最后一条 agent 消息，从 sender_id 推断谁是上一个发言者 | EN: Get the last agent message and infer who was the previous speaker from sender_id
             result = await db.execute(
                 select(Message)
                 .where(
@@ -1080,16 +1080,16 @@ class AgentDialogOrchestrator:
             if not last_message:
                 return
 
-            # 从最后一条消息的 sender_id 推断下一个发言者
+            # 从最后一条消息的 sender_id 推断下一个发言者 | EN: Infer the next speaker from the sender_id of the last message
             last_speaker_id = last_message.sender_id
             if last_speaker_id == session.initiator_agent_id:
-                # 上一个是 initiator，下一个是 responder
+                # 上一个是 initiator，下一个是 responder | EN: The previous one is initiator, the next one is responder
                 next_agent = await db.get(Agent, session.responder_agent_id)
                 next_agent_owner = await db.get(User, session.responder_owner_id)
                 other_owner = await db.get(User, session.initiator_owner_id)
                 is_initiator = False
             else:
-                # 上一个是 responder，下一个是 initiator
+                # 上一个是 responder，下一个是 initiator | EN: The previous one is responder and the next one is initiator
                 next_agent = await db.get(Agent, session.initiator_agent_id)
                 next_agent_owner = await db.get(User, session.initiator_owner_id)
                 other_owner = await db.get(User, session.responder_owner_id)
@@ -1098,7 +1098,7 @@ class AgentDialogOrchestrator:
             if not next_agent or not next_agent_owner or not other_owner:
                 return
 
-            # 构建 Prompt
+            # 构建 Prompt | EN: Build Prompt
             message_text = last_message.content.get("text", "")
             prompt = await self._build_prompt(
                 session=session,
@@ -1110,7 +1110,7 @@ class AgentDialogOrchestrator:
                 current_agent=next_agent,
             )
             
-            # 发送
+            # 发送 | EN: send
             await self._send_to_agent(
                 session=session,
                 agent=next_agent,
@@ -1128,7 +1128,7 @@ class AgentDialogOrchestrator:
         """发送消息到 Agent 的 OpenClaw Gateway"""
         conn = agent_connection_manager.get_connection(str(agent.id))
         if not conn:
-            # Agent 未连接，尝试建立连接
+            # Agent 未连接，尝试建立连接 | EN: Agent is not connected, try to establish a connection
             config = get_gateway_config(str(agent.owner_id))
             if not config:
                 logger.error(f"[Agent:{str(agent.id)[:8]}] No gateway config found")
@@ -1141,12 +1141,12 @@ class AgentDialogOrchestrator:
                 await self._handle_agent_offline(session, agent, db)
                 return
 
-        # 每个 Agent 使用独立的 session_key，确保 OpenClaw Gateway 中
-        # 两个 Agent 有各自独立的上下文，不会混淆身份和知识
+        # 每个 Agent 使用独立的 session_key，确保 OpenClaw Gateway 中 | EN: Each Agent uses an independent session_key to ensure that OpenClaw Gateway
+        # 两个 Agent 有各自独立的上下文，不会混淆身份和知识 | EN: The two Agents have their own independent contexts and do not confuse identity and knowledge.
         session_key = f"dialog:{session.id}:agent:{agent.id}"
         idempotency_key = f"dialog-{session.id}-{session.current_round}-{agent.id}"
 
-        # 获取参与者 ID 列表
+        # 获取参与者 ID 列表 | EN: Get a list of participant IDs
         result = await db.execute(
             select(ConversationParticipant.participant_id).where(
                 ConversationParticipant.conversation_id == session.conversation_id
@@ -1154,9 +1154,9 @@ class AgentDialogOrchestrator:
         )
         participant_ids = [str(row[0]) for row in result.all()]
 
-        # A2A tag 解析：根据角色明确 tag 来源
-        # - 发起者: 用自己 agent 绑定的 tag（用户选了哪个 agent 就用哪个 tag）
-        # - 响应者: 用 Contact 权限（我给对方设的 tag，即对方来找我时看到的人格）
+        # A2A tag 解析：根据角色明确 tag 来源 | EN: A2A tag analysis: clarify the tag source based on role
+        # - 发起者: 用自己 agent 绑定的 tag（用户选了哪个 agent 就用哪个 tag） | EN: - Initiator: Use the tag bound to your own agent (whichever agent the user chooses will use which tag)
+        # - 响应者: 用 Contact 权限（我给对方设的 tag，即对方来找我时看到的人格） | EN: - Respondent: Use Contact permission (the tag I set for the other party, that is, the personality the other party sees when they come to me)
         from src.services import tag_service
         is_initiator = (agent.id == session.initiator_agent_id)
         if is_initiator:
@@ -1170,7 +1170,7 @@ class AgentDialogOrchestrator:
             f"→ tag={tag.name}({tag.display_name}) tag_id={str(tag.id)[:8]}"
         )
 
-        # 定义回调处理响应（带错误恢复）
+        # 定义回调处理响应（带错误恢复） | EN: Define callbacks to handle responses (with error recovery)
         session_id_capture = session.id
         agent_id_capture = agent.id
 
@@ -1190,8 +1190,8 @@ class AgentDialogOrchestrator:
                 )
             )
 
-        # 发送 prompt 前先刷新 last_message_at，防止 cleanup 任务在 agent 处理期间
-        # 误判为空闲超时（last_message_at 仅在收到响应时更新，发送到响应之间可能很长）
+        # 发送 prompt 前先刷新 last_message_at，防止 cleanup 任务在 agent 处理期间 | EN: Refresh last_message_at before sending prompt to prevent the cleanup task from being interrupted during agent processing.
+        # 误判为空闲超时（last_message_at 仅在收到响应时更新，发送到响应之间可能很长） | EN: Misjudged as idle timeout (last_message_at is only updated when a response is received, the time between sending and response may be long)
         now = datetime.now(timezone.utc)
         await db.execute(
             update(AgentDialogSession)
@@ -1234,7 +1234,7 @@ class AgentDialogOrchestrator:
             exc_info=exc,
         )
 
-        # 尝试重试一次
+        # 尝试重试一次 | EN: Try again
         retry_task = asyncio.create_task(
             self._retry_handle_agent_response(
                 session_id, agent_id, response_text, participant_ids
@@ -1276,7 +1276,7 @@ class AgentDialogOrchestrator:
             exc_info=exc,
         )
 
-        # 异步暂停 session 并通知 owner
+        # 异步暂停 session 并通知 owner | EN: Asynchronously pause the session and notify the owner
         asyncio.create_task(
             self._emergency_pause_session(session_id, str(exc))
         )
@@ -1324,12 +1324,12 @@ class AgentDialogOrchestrator:
                 logger.warning(f"[A2A] Session {session_id} not found, ignoring response")
                 return
 
-            # 获取 initiator 语言偏好（用于本地化通知）
+            # 获取 initiator 语言偏好（用于本地化通知） | EN: Get the initiator language preference (for localized notifications)
             from src.services.prompt_templates import get_user_lang
             initiator_owner = await db.get(User, session.initiator_owner_id)
             lang = get_user_lang(initiator_owner)
 
-            # 检查会话是否仍在活跃状态
+            # 检查会话是否仍在活跃状态 | EN: Check if the session is still active
             if session.status not in (
                 DialogSessionStatus.ACTIVE.value,
                 DialogSessionStatus.PENDING_APPROVAL.value,
@@ -1338,17 +1338,17 @@ class AgentDialogOrchestrator:
                     f"[A2A Session:{str(session_id)[:8]}] Session already {session.status}, "
                     f"ignoring late response from agent {str(agent_id)[:8]}"
                 )
-                # 自愈：清理可能残留的内存状态
+                # 自愈：清理可能残留的内存状态 | EN: Self-healing: Clean up possible remaining memory states
                 self._cleanup_memory_state(str(session_id))
                 return
 
-            # 在清洗前先检测嵌套对话意图（<<NEED_AGENT_DIALOG>> 标记）
+            # 在清洗前先检测嵌套对话意图（<<NEED_AGENT_DIALOG>> 标记） | EN: Detect nested dialog intents before cleaning (<<NEED_AGENT_DIALOG>> tag)
             from src.services.intent_parser import extract_dialog_intents
             cleaned_for_intents, nested_intents = extract_dialog_intents(response_text)
             if nested_intents:
                 response_text = cleaned_for_intents
 
-            # 提取状态标记
+            # 提取状态标记 | EN: Extract status tag
             clean_text, status_marker = extract_dialog_status(response_text)
 
             logger.info(
@@ -1358,7 +1358,7 @@ class AgentDialogOrchestrator:
                 f"text_len={len(clean_text)}"
             )
 
-            # 清洗 LLM 回复中的杂质（XML标签、function_calls 等）
+            # 清洗 LLM 回复中的杂质（XML标签、function_calls 等） | EN: Clean impurities in LLM responses (XML tags, function_calls, etc.)
             clean_text = _clean_agent_response(clean_text)
 
             # --- Human review mode: hold draft instead of saving/forwarding ---
@@ -1415,11 +1415,11 @@ class AgentDialogOrchestrator:
         db: AsyncSession,
         lang: str = "zh-Hans",
     ) -> bool:
-        """处理嵌套对话请求：暂停当前 A2A 对话并创建 DiscoveryTask 子任务
+        """处理嵌套对话请求：暂停当前 A2A 对话并创建 DiscoveryTask 子任务 / EN: """Handle nested conversation requests: pause the current A2A conversation and create a DiscoveryTask subtask
 
         Returns:
-            True 表示已成功创建子任务并暂停当前对话，调用方应直接 return；
-            False 表示受限（如嵌套深度超限），调用方继续正常流程。
+            True 表示已成功创建子任务并暂停当前对话，调用方应直接 return； / EN: True indicates that the subtask has been successfully created and the current conversation has been suspended. The caller should return directly;
+            False 表示受限（如嵌套深度超限），调用方继续正常流程。 / EN: False indicates that it is limited (such as the nesting depth exceeds the limit), and the caller continues the normal process.
         """
         session_id_str = str(session.id)
         metadata = dict(session.metadata_ or {})
@@ -1432,7 +1432,7 @@ class AgentDialogOrchestrator:
             )
             return False
 
-        # 循环防护：过滤掉指向当前对话参与方的意图
+        # 循环防护：过滤掉指向当前对话参与方的意图 | EN: Loop protection: filter out intentions directed to current conversation participants
         initiator_owner = await db.get(User, session.initiator_owner_id)
         responder_owner = await db.get(User, session.responder_owner_id)
         current_party_names = {
@@ -1466,14 +1466,14 @@ class AgentDialogOrchestrator:
             f"agent {str(agent_id)[:8]}: targets={target_names}"
         )
 
-        # 缓存必要字段——_pause_session 内部 commit 后 session 属性会过期
+        # 缓存必要字段——_pause_session 内部 commit 后 session 属性会过期 | EN: Cache necessary fields - _pause_session session attribute will expire after internal commit
         session_conv_id = session.conversation_id
         session_initiator_agent_id = session.initiator_agent_id
         session_initiator_owner_id = session.initiator_owner_id
         session_responder_owner_id = session.responder_owner_id
         session_topic = session.topic
 
-        # 暂停当前对话（内部 commit + WS 通知）
+        # 暂停当前对话（内部 commit + WS 通知） | EN: Pause current conversation (internal commit + WS notification)
         from src.services.prompt_templates import get_reason_string
         await self._pause_session(
             session=session,
@@ -1482,13 +1482,13 @@ class AgentDialogOrchestrator:
             pause_reason=TerminationReason.NESTED_DIALOG,
         )
 
-        # 确定发起嵌套对话的 Agent 所属 Owner
+        # 确定发起嵌套对话的 Agent 所属 Owner | EN: Determine the Owner of the Agent that initiated the nested conversation
         if agent_id == session_initiator_agent_id:
             nested_owner_id = session_initiator_owner_id
         else:
             nested_owner_id = session_responder_owner_id
 
-        # 构造查询列表（携带嵌套深度，供子会话继承）
+        # 构造查询列表（携带嵌套深度，供子会话继承） | EN: Construct a query list (carrying nesting depth for inheritance by sub-sessions)
         queries = [
             {
                 "target_owner": i.target_owner,
@@ -1498,7 +1498,7 @@ class AgentDialogOrchestrator:
             for i in intents
         ]
 
-        # 创建 DiscoveryTask（内部 flush，尚未 commit）
+        # 创建 DiscoveryTask（内部 flush，尚未 commit） | EN: Create DiscoveryTask (internal flush, not committed yet)
         from src.services.discovery_service import discovery_orchestrator
 
         task = await discovery_orchestrator.create_task(
@@ -1512,7 +1512,7 @@ class AgentDialogOrchestrator:
             max_concurrent=2,
         )
 
-        # 一次性更新 session metadata + task 状态，合并为单次 commit
+        # 一次性更新 session metadata + task 状态，合并为单次 commit | EN: Update session metadata + task status at one time and merge into a single commit
         metadata["nested_initiator_agent_id"] = str(agent_id)
         metadata["nested_discovery_task_id"] = str(task.id)
         metadata["nesting_depth"] = nesting_depth
@@ -1521,7 +1521,7 @@ class AgentDialogOrchestrator:
         task.version += 1
         await db.commit()
 
-        # 启动子任务队列处理
+        # 启动子任务队列处理 | EN: Start subtask queue processing
         await discovery_orchestrator.start_task(str(task.id))
 
         logger.info(
@@ -1538,23 +1538,23 @@ class AgentDialogOrchestrator:
         db: AsyncSession,
         lang: str = "zh-Hans",
     ) -> bool:
-        """终止判定引擎
+        """终止判定引擎 / EN: """ Terminate the judgment engine
         
-        按优先级检查终止条件：
+        按优先级检查终止条件： / EN: Check termination conditions by priority:
         1. Owner 手动终止 (已在其他地方处理)
-        2. RESOLVED 标记
-        3. DEADLOCK 标记
-        4. 轮数上限
+        2. RESOLVED 标记 / EN: 2. RESOLVED mark
+        3. DEADLOCK 标记 / EN: 3. DEADLOCK mark
+        4. 轮数上限 / EN: 4. Upper limit of rounds
         5. 超时 (由定时任务处理)
-        6. 标记缺失兜底
+        6. 标记缺失兜底 / EN: 6. Marking missing pocket bottom
         
         Returns:
-            bool: True 继续，False 停止
+            bool: True 继续，False 停止 / EN: bool: True to continue, False to stop
         """
         session_id_str = str(session.id)
         log_prefix = f"[A2A Session:{session_id_str[:8]}]"
         
-        # 优先级 2: RESOLVED
+        # 优先级 2: RESOLVED | EN: Priority 2: RESOLVED
         if status_marker == "RESOLVED":
             logger.info(f"{log_prefix} RESOLVED marker detected, completing session")
             await self._complete_session(
@@ -1564,7 +1564,7 @@ class AgentDialogOrchestrator:
             )
             return False
         
-        # 优先级 3: DEADLOCK
+        # 优先级 3: DEADLOCK | EN: Priority 3: DEADLOCK
         if status_marker == "DEADLOCK":
             metadata = session.metadata_ or {}
             is_programmatic = bool(
@@ -1588,7 +1588,7 @@ class AgentDialogOrchestrator:
                 )
             return False
 
-        # 优先级 4: 轮数上限
+        # 优先级 4: 轮数上限 | EN: Priority 4: Maximum number of rounds
         if session.current_round >= session.max_rounds:
             metadata = session.metadata_ or {}
             is_programmatic = bool(
@@ -1617,13 +1617,13 @@ class AgentDialogOrchestrator:
                 )
             return False
         
-        # 优先级 6: 标记缺失兜底
+        # 优先级 6: 标记缺失兜底 | EN: Priority 6: Mark missing clues
         if status_marker is None:
             self._missing_marker_count[session_id_str] = (
                 self._missing_marker_count.get(session_id_str, 0) + 1
             )
             
-            # 首次缺失就触发语义完结检测，连续 2 次缺失触发全面机械检测
+            # 首次缺失就触发语义完结检测，连续 2 次缺失触发全面机械检测 | EN: The first deletion triggers semantic completion detection, and 2 consecutive deletions trigger comprehensive mechanical detection.
             if self._missing_marker_count[session_id_str] >= 1:
                 should_stop = await self._mechanical_detection(
                     session=session,
@@ -1634,10 +1634,10 @@ class AgentDialogOrchestrator:
                 if should_stop:
                     return False
         else:
-            # 有标记，重置计数
+            # 有标记，重置计数 | EN: Marked, reset count
             self._missing_marker_count[session_id_str] = 0
         
-        # 更新最近消息（用于重复检测）
+        # 更新最近消息（用于重复检测） | EN: Update recent messages (for duplicate detection)
         if session_id_str not in self._recent_messages:
             self._recent_messages[session_id_str] = []
         self._recent_messages[session_id_str].append(response_text)
@@ -1648,31 +1648,31 @@ class AgentDialogOrchestrator:
 
     @staticmethod
     def _detect_semantic_completion(text: str) -> bool:
-        """检测回复是否在语义上表达了「对话已完结」
+        """检测回复是否在语义上表达了「对话已完结」 / EN: """Check whether the reply semantically expresses "the conversation is over"
 
-        通过组合关键词模式匹配来判断 Agent 是否已经表达出对话结束的意图，
-        即使没有输出 <<RESOLVED>> 标记。
+        通过组合关键词模式匹配来判断 Agent 是否已经表达出对话结束的意图， / EN: Determine whether the Agent has expressed its intention to end the conversation by combining keyword pattern matching.
+        即使没有输出 <<RESOLVED>> 标记。 / EN: Even though no <<RESOLVED>> tag is output.
 
         Returns:
-            bool: True 表示语义上已完结
+            bool: True 表示语义上已完结 / EN: bool: True indicates semantic completion
         """
-        # 完结性动词/短语（必须至少命中一组）
+        # 完结性动词/短语（必须至少命中一组） | EN: Perfective verb/phrase (must hit at least one group)
         # Chinese patterns
         zh_completion_signals = [
-            # 表达"已充分了解/获取到信息"
+            # 表达"已充分了解/获取到信息" | EN: To express "have fully understood/obtained information"
             r"已经充分了解",
             r"已经了解了",
             r"已经获得了.*(?:所需|需要的|充分的).*信息",
             r"信息已(?:足够|充分|完整)",
-            # 表达感谢+总结性收尾
+            # 表达感谢+总结性收尾 | EN: Express thanks + wrap up
             r"非常感谢.*(?:提供|分享|回答|解答)",
             r"感谢.*(?:详细|耐心|全面).*(?:回答|回复|解答|分享)",
-            # 明确的结束表述
+            # 明确的结束表述 | EN: clear closing statement
             r"对话(?:可以|到此)?(?:结束|告一段落)",
             r"问题(?:已经)?(?:解决|得到.*解答|得到.*回答)",
             r"(?:没有|不再有).*(?:其他|更多).*(?:问题|疑问)",
             r"(?:暂时|目前).*(?:没有|不需要).*(?:其他|更多|进一步)",
-            # Agent 主动收尾
+            # Agent 主动收尾 | EN: Agent proactively ends
             r"如果.*(?:还有|未来有).*(?:问题|需要).*(?:随时|欢迎)",
             r"(?:祝|希望).*(?:一切顺利|工作顺利|顺利)",
         ]
@@ -1699,7 +1699,7 @@ class AgentDialogOrchestrator:
         text_lower = text.lower()
         zh_matched = sum(1 for p in zh_completion_signals if re.search(p, text_lower))
         en_matched = sum(1 for p in en_completion_signals if re.search(p, text_lower))
-        # 命中 2 个及以上模式视为语义完结（中英文分别计数再合并）
+        # 命中 2 个及以上模式视为语义完结（中英文分别计数再合并） | EN: Hitting 2 or more patterns is considered semantically complete (Chinese and English are counted separately and then merged)
         return (zh_matched + en_matched) >= 2
 
     async def _mechanical_detection(
@@ -1709,21 +1709,21 @@ class AgentDialogOrchestrator:
         db: AsyncSession,
         lang: str = "zh-Hans",
     ) -> bool:
-        """机械检测（标记缺失兜底）
+        """机械检测（标记缺失兜底） / EN: """Mechanical detection (marking is missing)
         
-        检测：
-        a. 语义完结检测（Agent 的回复在语义上已表达对话结束）
-        b. 重复检测（最近 4 条消息相似度 > 0.85）
-        c. 消息萎缩（回复长度连续缩短至首轮的 30% 以下）
+        检测： / EN: Detection:
+        a. 语义完结检测（Agent 的回复在语义上已表达对话结束） / EN: a. Semantic completion detection (the Agent’s reply semantically expresses the end of the conversation)
+        b. 重复检测（最近 4 条消息相似度 > 0.85） / EN: b. Duplicate detection (similarity of the last 4 messages > 0.85)
+        c. 消息萎缩（回复长度连续缩短至首轮的 30% 以下） / EN: c. Message shrinkage (reply length continuously shortens to less than 30% of the first round)
         
         Returns:
-            bool: True 应该停止，False 继续
+            bool: True 应该停止，False 继续 / EN: bool: True should stop, False should continue
         """
         session_id_str = str(session.id)
         log_prefix = f"[Session:{session_id_str[:8]}]"
         recent = self._recent_messages.get(session_id_str, [])
 
-        # (a) 语义完结检测
+        # (a) 语义完结检测 | EN: (a) Semantic completion detection
         if self._detect_semantic_completion(response_text):
             logger.info(
                 f"{log_prefix} Semantic completion detected (no marker), "
@@ -1737,7 +1737,7 @@ class AgentDialogOrchestrator:
             return True
         
         if len(recent) >= 2:
-            # (b) 重复检测
+            # (b) 重复检测 | EN: (b) Repeat testing
             for i, prev_msg in enumerate(recent[:-1]):
                 similarity = calculate_text_similarity(prev_msg, response_text)
                 if similarity > 0.85:
@@ -1755,11 +1755,11 @@ class AgentDialogOrchestrator:
                     return True
 
         if len(recent) >= 3:
-            # (c) 消息萎缩检测
+            # (c) 消息萎缩检测 | EN: (c) Message shrinkage detection
             first_len = len(recent[0])
             current_len = len(response_text)
             if first_len > 0 and current_len / first_len < 0.3:
-                # 检查是否连续缩短
+                # 检查是否连续缩短 | EN: Check for continuous shortening
                 if all(len(recent[i]) > len(recent[i+1]) for i in range(len(recent)-1)):
                     logger.warning(
                         f"{log_prefix} Detected message shrinking "
@@ -1786,21 +1786,21 @@ class AgentDialogOrchestrator:
         """切换发言者并继续对话（从 current_agent_id 推断，不依赖内存状态）"""
         session_id_str = str(session.id)
 
-        # 从 current_agent_id 直接推断下一个发言者，不依赖 _active_sessions
+        # 从 current_agent_id 直接推断下一个发言者，不依赖 _active_sessions | EN: Infer next speaker directly from current_agent_id without relying on _active_sessions
         if current_agent_id == session.initiator_agent_id:
-            # 当前是 initiator 说完了，下一个是 responder
+            # 当前是 initiator 说完了，下一个是 responder | EN: The current initiator is finished, the next one is the responder
             next_agent = await db.get(Agent, session.responder_agent_id)
             next_agent_owner = await db.get(User, session.responder_owner_id)
             other_owner = await db.get(User, session.initiator_owner_id)
             is_initiator = False
         else:
-            # 当前是 responder 说完了，下一个是 initiator
+            # 当前是 responder 说完了，下一个是 initiator | EN: The current one is the responder. After that, the next one is the initiator.
             next_agent = await db.get(Agent, session.initiator_agent_id)
             next_agent_owner = await db.get(User, session.initiator_owner_id)
             other_owner = await db.get(User, session.responder_owner_id)
             is_initiator = True
 
-        # 更新内存缓存（仅作为辅助，不是决策依据）
+        # 更新内存缓存（仅作为辅助，不是决策依据） | EN: Update the memory cache (only as an aid, not a basis for decision-making)
         ctx = self._active_sessions.get(session_id_str)
         if ctx:
             ctx["current_speaker"] = "initiator" if is_initiator else "responder"
@@ -1808,11 +1808,11 @@ class AgentDialogOrchestrator:
         if not next_agent or not next_agent_owner or not other_owner:
             return
 
-        # 获取下一个发言者的语言偏好
+        # 获取下一个发言者的语言偏好 | EN: Get the next speaker's language preference
         from src.services.prompt_templates import get_user_lang
         lang = get_user_lang(next_agent_owner)
 
-        # 构建 Prompt
+        # 构建 Prompt | EN: Build Prompt
         prompt = await self._build_prompt(
             session=session,
             is_initiator=is_initiator,
@@ -1824,7 +1824,7 @@ class AgentDialogOrchestrator:
             lang=lang,
         )
 
-        # 发送给下一个 Agent
+        # 发送给下一个 Agent | EN: Send to next Agent
         await self._send_to_agent(
             session=session,
             agent=next_agent,
@@ -1843,10 +1843,10 @@ class AgentDialogOrchestrator:
         current_agent: Optional[Agent] = None,
         lang: str = "zh-Hans",
     ) -> str:
-        """构建 Prompt
+        """构建 Prompt / EN: """Build Prompt
 
-        当 current_agent + db 非空且目标是 Responder 时，自动注入联系人能力声明，
-        使其可以在对话中发起嵌套 A2A 对话。
+        当 current_agent + db 非空且目标是 Responder 时，自动注入联系人能力声明， / EN: When current_agent + db is not empty and the target is Responder, the contact capability statement is automatically injected.
+        使其可以在对话中发起嵌套 A2A 对话。 / EN: Make it possible to initiate nested A2A conversations within a conversation.
         """
         from src.services.prompt_templates import get_template
 
@@ -1894,7 +1894,7 @@ class AgentDialogOrchestrator:
         if not contacts:
             return ""
 
-        # 获取 responder 自己的 owner name，用于 capability prompt 的自我认知
+        # 获取 responder 自己的 owner name，用于 capability prompt 的自我认知 | EN: Get the responder's own owner name, used for self-awareness of the capability prompt
         responder_owner = await db.get(User, agent.owner_id)
         my_owner_name = responder_owner.display_name if responder_owner else ""
 
@@ -1915,7 +1915,7 @@ class AgentDialogOrchestrator:
         session_id_str = str(session.id)
         log_prefix = f"[Session:{session_id_str[:8]}]"
 
-        # 乐观锁：原子更新状态，防止 cleanup 同时终止
+        # 乐观锁：原子更新状态，防止 cleanup 同时终止 | EN: Optimistic locking: atomic update status to prevent cleanup from terminating at the same time
         result = await db.execute(
             update(AgentDialogSession)
             .where(
@@ -1938,13 +1938,13 @@ class AgentDialogOrchestrator:
             self._cleanup_memory_state(session_id_str)
             return
 
-        # 刷新获取最新状态
+        # 刷新获取最新状态 | EN: Refresh to get latest status
         await db.refresh(session)
 
-        # 清理内存状态
+        # 清理内存状态 | EN: Clean up memory state
         self._cleanup_memory_state(session_id_str)
 
-        # 发送结构化对话状态消息
+        # 发送结构化对话状态消息 | EN: Send structured conversation status messages
         await self._send_dialog_status(
             db,
             session.conversation_id,
@@ -1953,16 +1953,16 @@ class AgentDialogOrchestrator:
             owner_ids=[session.initiator_owner_id, session.responder_owner_id],
         )
 
-        # 立即提交状态变更，防止定时任务读取到旧状态导致二次终止
+        # 立即提交状态变更，防止定时任务读取到旧状态导致二次终止 | EN: Submit status changes immediately to prevent scheduled tasks from reading the old status and causing secondary termination.
         await db.commit()
 
-        # commit 后刷新 session 对象，避免属性 expired 导致后续访问失败
+        # commit 后刷新 session 对象，避免属性 expired 导致后续访问失败 | EN: Refresh the session object after commit to avoid the expired attribute causing subsequent access failures.
         try:
             await db.refresh(session)
         except Exception as e:
             logger.warning(f"{log_prefix} Failed to refresh session after commit: {e}")
 
-        # 通知双方（commit 后安全投递，失败不阻塞）
+        # 通知双方（commit 后安全投递，失败不阻塞） | EN: Notify both parties (safe delivery after commit, no blocking on failure)
         try:
             await ws_manager.send_dialog_completed(
                 user_ids=[str(session.initiator_owner_id), str(session.responder_owner_id)],
@@ -1974,7 +1974,7 @@ class AgentDialogOrchestrator:
         except Exception as e:
             logger.warning(f"{log_prefix} Failed to send dialog.completed notification: {e}")
 
-        # 结果回传：检查是否属于发现任务，如果是则由编排器处理
+        # 结果回传：检查是否属于发现任务，如果是则由编排器处理 | EN: Result return: Check whether it belongs to the discovery task, if so, it will be processed by the orchestrator
         await self._feedback_dialog_result(session, db)
 
     async def _feedback_dialog_result(
@@ -1982,11 +1982,11 @@ class AgentDialogOrchestrator:
         session: AgentDialogSession,
         db: AsyncSession,
     ):
-        """将 A2A 对话结果回传给原始会话
+        """将 A2A 对话结果回传给原始会话 / EN: """Post the results of the A2A conversation back to the original conversation
 
-        当对话完成后：
-        1. 如果属于 DiscoveryTask，由 DiscoveryOrchestrator 处理
-        2. 否则直接注入回原始会话（原有行为）
+        当对话完成后： / EN: When the conversation is complete:
+        1. 如果属于 DiscoveryTask，由 DiscoveryOrchestrator 处理 / EN: 1. If it belongs to DiscoveryTask, it will be processed by DiscoveryOrchestrator
+        2. 否则直接注入回原始会话（原有行为） / EN: 2. Otherwise, inject directly back to the original session (original behavior)
         """
         from src.services.prompt_templates import build_dialog_result_prompt_i18n, get_user_lang
         from src.services.openclaw_service import openclaw_service
@@ -2001,7 +2001,7 @@ class AgentDialogOrchestrator:
             str(session.id)[:8], metadata, source_conv_id, discovery_task_id,
         )
 
-        # 如果属于发现任务，交给编排器处理
+        # 如果属于发现任务，交给编排器处理 | EN: If it is a discovery task, it is handed over to the orchestrator.
         if discovery_task_id:
             try:
                 from src.services.discovery_service import discovery_orchestrator
@@ -2102,11 +2102,11 @@ class AgentDialogOrchestrator:
         session: AgentDialogSession,
         db: AsyncSession,
     ) -> str:
-        """构建对话摘要
+        """构建对话摘要 / EN: """Build conversation summary
         
-        提取对话的最后几轮消息作为摘要。
+        提取对话的最后几轮消息作为摘要。 / EN: Extract the last few rounds of messages of the conversation as a summary.
         """
-        # 获取对话中的消息（最后 4 条 Agent 消息）
+        # 获取对话中的消息（最后 4 条 Agent 消息） | EN: Get the messages in the conversation (last 4 Agent messages)
         result = await db.execute(
             select(Message).where(
                 Message.conversation_id == session.conversation_id,
@@ -2118,10 +2118,10 @@ class AgentDialogOrchestrator:
         if not messages:
             return "（对话无实质内容）"
         
-        # 反转顺序（最早的在前）
+        # 反转顺序（最早的在前） | EN: Reverse order (oldest first)
         messages = list(reversed(messages))
         
-        # 构建摘要
+        # 构建摘要 | EN: Build summary
         summary_parts = []
         for msg in messages:
             content = msg.content
@@ -2130,12 +2130,12 @@ class AgentDialogOrchestrator:
             else:
                 text = str(content)
             
-            # 移除状态标记
+            # 移除状态标记 | EN: Remove status flag
             import re
             text = re.sub(r'<<(RESOLVED|CONTINUE|DEADLOCK)>>', '', text).strip()
             
             if text:
-                # 截取前 200 字符
+                # 截取前 200 字符 | EN: Truncate first 200 characters
                 if len(text) > 200:
                     text = text[:200] + "..."
                 summary_parts.append(text)
@@ -2149,15 +2149,15 @@ class AgentDialogOrchestrator:
         db: AsyncSession,
         pause_reason: Optional[TerminationReason] = None,
     ):
-        """暂停会话（带乐观锁保护）
+        """暂停会话（带乐观锁保护） / EN: """Pause session (with optimistic locking protection)
 
         Args:
-            pause_reason: 暂停原因枚举值，持久化到 termination_reason 字段，
-                          后续 cleanup terminate 时不会覆写已有值
+            pause_reason: 暂停原因枚举值，持久化到 termination_reason 字段， / EN: pause_reason: pause reason enumeration value, persisted to the termination_reason field,
+                          后续 cleanup terminate 时不会覆写已有值 / EN: Existing values ​​will not be overwritten during subsequent cleanup terminate
         """
         session_id_str = str(session.id)
 
-        # 乐观锁：原子更新状态为 PAUSED，同时记录暂停原因
+        # 乐观锁：原子更新状态为 PAUSED，同时记录暂停原因 | EN: Optimistic locking: Atomic update status is PAUSED, while recording the reason for suspension
         update_values: dict = {
             "status": DialogSessionStatus.PAUSED.value,
             "version": session.version + 1,
@@ -2185,10 +2185,10 @@ class AgentDialogOrchestrator:
             )
             return
 
-        # 刷新获取最新状态
+        # 刷新获取最新状态 | EN: Refresh to get latest status
         await db.refresh(session)
 
-        # 发送结构化对话状态消息
+        # 发送结构化对话状态消息 | EN: Send structured conversation status messages
         await self._send_dialog_status(
             db,
             session.conversation_id,
@@ -2197,10 +2197,10 @@ class AgentDialogOrchestrator:
             owner_ids=[session.initiator_owner_id, session.responder_owner_id],
         )
 
-        # 立即提交状态变更，防止定时任务读取到旧状态导致二次终止
+        # 立即提交状态变更，防止定时任务读取到旧状态导致二次终止 | EN: Submit status changes immediately to prevent scheduled tasks from reading the old status and causing secondary termination.
         await db.commit()
 
-        # 通知双方（commit 后安全投递）
+        # 通知双方（commit 后安全投递） | EN: Notify both parties (safe delivery after commit)
         try:
             await ws_manager.send_dialog_paused(
                 user_ids=[str(session.initiator_owner_id), str(session.responder_owner_id)],
@@ -2216,8 +2216,8 @@ class AgentDialogOrchestrator:
                 str(session.id)[:8], e,
             )
 
-        # 对于实质性终止的程序化对话，触发结果回传
-        # （NESTED_DIALOG 除外，因为那是主动暂停等待子任务完成）
+        # 对于实质性终止的程序化对话，触发结果回传 | EN: For programmatic conversations that are substantially terminated, trigger result postback
+        # （NESTED_DIALOG 除外，因为那是主动暂停等待子任务完成） | EN: (Except for NESTED_DIALOG, because that is actively pausing to wait for the subtask to complete)
         if pause_reason and pause_reason != TerminationReason.NESTED_DIALOG:
             metadata = session.metadata_ or {}
             has_feedback_target = bool(
@@ -2243,7 +2243,7 @@ class AgentDialogOrchestrator:
 
         session.status = DialogSessionStatus.PAUSED.value
 
-        # 发送结构化对话状态消息
+        # 发送结构化对话状态消息 | EN: Send structured conversation status messages
         await self._send_dialog_status(
             db,
             session.conversation_id,
@@ -2255,7 +2255,7 @@ class AgentDialogOrchestrator:
         
         await db.flush()
 
-        # 程序化对话（有 source 或 discovery）离线时，回传反馈给源会话
+        # 程序化对话（有 source 或 discovery）离线时，回传反馈给源会话 | EN: When a programmatic conversation (with source or discovery) is offline, feedback is returned to the source conversation
         metadata = session.metadata_ or {}
         if metadata.get("discovery_task_id") or metadata.get("source_conversation_id"):
             logger.info(
@@ -2264,7 +2264,7 @@ class AgentDialogOrchestrator:
             )
             await self._feedback_dialog_result(session, db)
 
-        # 通知双方（flush 后安全投递，caller 负责 commit）
+        # 通知双方（flush 后安全投递，caller 负责 commit） | EN: Notify both parties (safe delivery after flush, caller is responsible for commit)
         try:
             await ws_manager.send_dialog_paused(
                 user_ids=[str(session.initiator_owner_id), str(session.responder_owner_id)],
@@ -2348,7 +2348,7 @@ class AgentDialogOrchestrator:
         await db.flush()
 
         if owner_ids:
-            # 递增 human Owner 的未读计数
+            # 递增 human Owner 的未读计数 | EN: Increment the human Owner's unread count
             result = await db.execute(
                 select(ConversationParticipant).where(
                     ConversationParticipant.conversation_id == conversation_id,
@@ -2359,7 +2359,7 @@ class AgentDialogOrchestrator:
             for p in result.scalars().all():
                 p.unread_count = (p.unread_count or 0) + 1
 
-            # 更新会话的最后消息预览
+            # 更新会话的最后消息预览 | EN: Update conversation's last message preview
             conv_result = await db.execute(
                 select(Conversation).where(Conversation.id == conversation_id)
             )
@@ -2372,7 +2372,7 @@ class AgentDialogOrchestrator:
 
             await db.flush()
 
-            # 广播给 Owner（失败不阻塞业务）
+            # 广播给 Owner（失败不阻塞业务） | EN: Broadcast to Owner (failure does not block business)
             str_owner_ids = [str(oid) for oid in owner_ids]
             try:
                 await ws_manager.broadcast_message(
@@ -2472,9 +2472,9 @@ class AgentDialogOrchestrator:
         session_id: str,
         new_status: str,
     ):
-        """更新数据库中 dialog_request / dialog_approval 卡片消息的 status 字段。
+        """更新数据库中 dialog_request / dialog_approval 卡片消息的 status 字段。 / EN: """Update the status field of the dialog_request / dialog_approval card message in the database.
         
-        确保历史消息加载时卡片状态也是最新的。
+        确保历史消息加载时卡片状态也是最新的。 / EN: Make sure the card status is up-to-date when historical messages are loaded.
         """
         from sqlalchemy import or_
         result = await db.execute(
@@ -2510,7 +2510,7 @@ class AgentDialogOrchestrator:
         db: AsyncSession,
     ) -> DialogSessionResponse:
         """构建会话响应"""
-        # 获取关联数据
+        # 获取关联数据 | EN: Get associated data
         initiator_agent = await db.get(Agent, session.initiator_agent_id)
         responder_agent = await db.get(Agent, session.responder_agent_id)
         initiator_owner = await db.get(User, session.initiator_owner_id)
@@ -2856,36 +2856,36 @@ class AgentDialogOrchestrator:
         return "\n".join(lines)
 
 
-# 全局调度器实例
+# 全局调度器实例 | EN: Global scheduler instance
 agent_dialog_orchestrator = AgentDialogOrchestrator()
 
 
-# ============ Agent 连接管理辅助函数 ============
+# ============ Agent 连接管理辅助函数 ============ | EN: ============ Agent connection management auxiliary function ============
 
 async def connect_agent_on_online(agent_id: str, owner_id: str) -> bool:
-    """Agent 上线时建立 Gateway 连接
+    """Agent 上线时建立 Gateway 连接 / EN: """Establish a Gateway connection when the Agent comes online
     
-    在 agent status 设为 online 时调用。
+    在 agent status 设为 online 时调用。 / EN: Called when agent status is set to online.
     """
     config = get_gateway_config(owner_id)
     if not config:
         logger.warning(f"[Agent:{agent_id[:8]}] Owner has no gateway config")
         return False
     
-    # 注册 Agent 的 gateway 配置
+    # 注册 Agent 的 gateway 配置 | EN: Register the gateway configuration of the Agent
     register_agent_gateway(agent_id, config)
     
-    # 建立连接
+    # 建立连接 | EN: Establish connection
     conn = await agent_connection_manager.connect_agent(agent_id, config)
     return conn is not None and conn.connected
 
 
 async def disconnect_agent_on_offline(agent_id: str) -> None:
-    """Agent 下线时断开 Gateway 连接
+    """Agent 下线时断开 Gateway 连接 / EN: """Disconnect the Gateway connection when the Agent goes offline
     
-    在 agent status 设为 offline 时调用。
+    在 agent status 设为 offline 时调用。 / EN: Called when agent status is set to offline.
     """
-    # 清理进行中的对话会话
+    # 清理进行中的对话会话 | EN: Clean up ongoing conversation sessions
     async with async_session() as db:
         result = await db.execute(
             select(AgentDialogSession).where(
@@ -2908,8 +2908,8 @@ async def disconnect_agent_on_offline(agent_id: str) -> None:
         
         await db.commit()
     
-    # 断开连接
+    # 断开连接 | EN: Disconnect
     await agent_connection_manager.disconnect_agent(agent_id)
     
-    # 注销配置
+    # 注销配置 | EN: Unregister configuration
     unregister_agent_gateway(agent_id)

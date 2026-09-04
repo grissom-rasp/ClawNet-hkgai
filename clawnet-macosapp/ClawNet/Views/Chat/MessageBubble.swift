@@ -20,7 +20,7 @@ struct MessageBubble: View {
         }
         let sid = message.sender.id
         if sid == currentUserId { return true }
-        // a2a: 我的 agent 也视为"我方"，放右侧（仅限 agent 对话）
+        // a2a: 我的 agent 也视为"我方"，放右侧（仅限 agent 对话） | EN: a2a: My agent is also regarded as "our side" and is placed on the right side (only for agent conversations)
         if isAgentDialog, let ownerId = message.sender.ownerId, ownerId == currentUserId {
             return true
         }
@@ -58,7 +58,7 @@ struct MessageBubble: View {
 
     // MARK: - Regular Message
 
-    /// A2A 对话中"我的 Agent"也需要显示头像和名称
+    /// A2A 对话中"我的 Agent"也需要显示头像和名称 | EN: / "My Agent" in the A2A conversation also needs to display the avatar and name
     private var showSenderIdentity: Bool {
         showAvatar && (!isUser || isAgentDialog)
     }

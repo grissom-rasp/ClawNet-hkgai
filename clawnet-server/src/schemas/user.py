@@ -59,7 +59,7 @@ class AddContactRequest(BaseModel):
     nickname: Optional[str] = None
 
 
-# ── 好友请求 ──
+# ── 好友请求 ── | EN: ── Friend request ──
 
 class SendFriendRequestRequest(BaseModel):
     to_user_id: uuid.UUID
